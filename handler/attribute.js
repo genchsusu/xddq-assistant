@@ -106,6 +106,7 @@ class AttributeManager {
     handlerPlayerAttribute(body) {
         this.playerLevel = Number(body.realmsId); // 等级
         this.playerFightValue = Number(body.fightValue); // 妖力
+        logger.info("[Server] [玩家数据] 等级: " + this.playerLevel + " 妖力: " + this.playerFightValue);
     }
 
     handlerSeparation(body) {
@@ -142,6 +143,59 @@ class AttributeManager {
         return this.bagData.find((item) => item.propId === id) || { num: 0 };
     }
 
+    processAttributes(attributeList) {
+        const attributes = {
+            basic: {
+                1: null,
+                2: null,
+                3: null,
+                4: null
+            },
+            attack: null,
+            defense: null
+        };
+
+        for (const attr of attributeList) {
+            if (attr.type >= 1 && attr.type <= 4) {
+                attributes.basic[attr.type] = parseFloat(attr.value);
+            } else if (attr.type >= 5 && attr.type <= 10) {
+                attributes.attack = { type: attr.type, value: parseFloat(attr.value) };
+            } else if (attr.type >= 11 && attr.type <= 16) {
+                attributes.defense = { type: attr.type, value: parseFloat(attr.value) };
+            }
+        }
+
+        return attributes;
+    }
+
+    checkCondition(input, condition) {
+        for (let i = 0; i < condition.length; i++) {
+            for (let j = 0; j < condition[i].length; j++) {
+                const element = condition[i][j];
+                if (Array.isArray(element) && Array.isArray(input) && input.length === element.length && input.every((val, index) => val === element[index])) {
+                    return { result: true, index: i };
+                } else if (element === input) {
+                    return { result: true, index: i };
+                }
+            }
+        }
+        return { result: false, index: -1 };
+    }
+
+    checkMultipleConditions(input1, input2, condition) {
+        let result1 = this.checkCondition(input1, condition);
+        if (result1.result) {
+            return result1;
+        }
+        
+        let result2 = this.checkCondition(input2, condition);
+        if (result2.result) {
+            return result2;
+        }
+        
+        return { result: false, index: -1 };
+    }
+
     async handlerEquipment(body) {
         if (body.ret === 0) {
             if (this.status === "busy") {
@@ -159,47 +213,40 @@ class AttributeManager {
                 const u = equipment.unDealEquipmentData; // 该装备的未处理数据
                 const id = u.id; // 该装备的id
                 const quality = u.quality; // 该装备的品质
-                const attributeList = u.attributeList; // 详细属性
+                const attributeList = this.processAttributes(u.attributeList); // 使用转换后的属性列表
                 const equipmentId = u.equipmentId; // 该装备的装备id
                 // 根据equipmentId找到装备的类型
                 const equipmentType = this.dbMgr.getEquipment(equipmentId).type - 1;
 
                 if (this.separation) {
-                    // 规则为分身规则
                     const rule = account.chopTree.separation;
-                    // 分别比较三个分身的装备
-                    for (let index = 0; index < 3; index++) {
+
+                    const attackType = attributeList.attack.type;
+                    const defenseType = attributeList.defense.type;
+
+                    const {result , index } = this.checkMultipleConditions(attackType, [ attackType, defenseType], rule.condition)
+                    // 判断是否满足条件
+                    if (result) {
                         // 质量 和 妖力*偏移量 均满足条件
                         if (quality >= rule.quality && fightValue >= this.fightValueData[index] * (1 - rule.fightValueOffset)) {
-                            const conditions = rule.condition[index];
+                            // 判断是否有更好的属性
 
-                            // 是否满足必要条件
-                            const requiredMet = conditions.some((condition) => {
-                                // 如果是数组，表示需要同时满足
-                                if (Array.isArray(condition)) {
-                                    return condition.every((subCondition) => attributeList.some((attr) => attr.type === subCondition));
-                                }
-                                // 否则只需要满足其中一个
-                                return attributeList.some((attr) => attr.type === condition);
-                            });
+                            // 处理分身属性
+                            const existingAttributeList = this.processAttributes(this.equipmentData[index][equipmentType].attributeList);
 
-                            if (requiredMet) {
-                                const betterAttributes = attributeList.filter(attr => {
-                                    const existingAttr = this.equipmentData[index][equipmentType].attributeList.find(existing => existing.type === attr.type);
-                                    if (!existingAttr) {
-                                        return true; // 如果现有装备不包含该属性，直接认为满足条件
-                                    }
-                                    return parseFloat(attr.value) >= parseFloat(existingAttr.value) * (1 - rule.probOffset);
-                                });
+                            let betterAttributes = false;
+                            if (!rule.condition[index].includes(existingAttributeList.attack )) {
+                                betterAttributes = true;
+                            } else {
+                                betterAttributes = parseFloat(attributeList.attack.value) >= parseFloat(existingAttr.value) * (1 - rule.probOffset)
+                            }
 
-                                if (betterAttributes) {
-                                    logger.info(`[装备] 分身${index} 符合条件 ${this.dbMgr.getEquipmentQuality(quality)} ${this.dbMgr.getEquipmentName(equipmentId)}`);
-                                    TaskManager.instance.add(Attribute.SwitchSeparation(index));
-                                    TaskManager.instance.add(Attribute.DealEquipmentEnum_EquipAndResolveOld(id));
-                                    TaskManager.instance.add(Attribute.FetchSeparation());
-                                    processed = true;
-                                    break;
-                                }
+                            if (betterAttributes) {
+                                logger.info(`[装备] 分身${index} 符合条件 ${this.dbMgr.getEquipmentQuality(quality)} ${this.dbMgr.getEquipmentName(equipmentId)}`);
+                                TaskManager.instance.add(Attribute.SwitchSeparation(index));
+                                TaskManager.instance.add(Attribute.DealEquipmentEnum_EquipAndResolveOld(id));
+                                TaskManager.instance.add(Attribute.FetchSeparation());
+                                processed = true;
                             }
                         }
                     }
