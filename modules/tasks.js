@@ -169,8 +169,7 @@ class TaskManager {
             fs.writeFileSync(oneTimeFile, 'pass');
             logger.info("添加额外的初始化任务!!!");
             const staticTasks = [
-                new ImmediateTask("仙宫朝拜1", 24802, {titleId: 0, isRandom: 1}),
-                new ImmediateTask("仙宫朝拜2", 24803, {}),
+                new ImmediateTask("仙宫朝拜", 24802, {titleId: 0, isRandom: 1}),
                 new ImmediateTask("升宝堂", 21005, { activityId: 9772959, mallId: 400000003, count: "1" }),
                 new ImmediateTask("自选礼包", 21005, { activityId: 9712933, mallId: 400000003, count: "1" }),
                 new ImmediateTask("超值礼包", 21005, { activityId: 9712935, mallId: 400000003, count: "1" }),
@@ -181,8 +180,25 @@ class TaskManager {
                 new ImmediateTask("灵兽运势游戏圈奖励", 21031, { activityId: 0, conditionId: 0 }),
                 new ImmediateTask("镇妖塔选择偏好", 20767, {markPreference: [{priority: 1,skillType: 1017},{priority: 2,skillType: 1018},{priority: 3,skillType: 1023},{priority: 4,skillType: 1024},{priority: 5,skillType: 1022}]}),
                 new ImmediateTask("镇妖塔快速挑战", 20763, {}),
-                new ImmediateTask("广告妖盟", 20503, { taskId: [120006] }),
+                new ImmediateTask("妖盟砍价", 22166, { bussinessId: 2178 }),
+                new ImmediateTask("妖盟广告1", 20019, { activityId: 0, conditionId: 120006, isUseADTime: false }),
+                new ImmediateTask("妖盟广告2", 20503, { taskId: [120006] }),
+                new ImmediateTask("妖盟买桃免费", 20601, { mallId: 230000011, count: 1, activityId: 0 }),
+                new ImmediateTask("妖盟买桃1", 20601, { mallId: 230000001, count: 1, activityId: 0 }),
+                new ImmediateTask("妖盟买桃2", 20601, { mallId: 230000002, count: 1, activityId: 0 }),
+                new ImmediateTask("妖盟买腾蛇信物", 20601, { mallId: 230000012, count: 3, activityId: 0 }),
+                new ImmediateTask("妖盟领取每日任务奖励", 22118, { actIndex: 4 }),
             ];
+
+            // 如果是周一到周五，添加额外的任务
+            const day = new Date().getDay();
+            if (day >= 1 && day <= 5) {
+                staticTasks.push(
+                    new ImmediateTask("妖盟布阵", 25802, {}),
+                    new ImmediateTask("妖盟战斗", 25805, {}),
+                    new ImmediateTask("妖盟领奖", 25804, {})
+                );
+            }
 
             initialTasks.push(...staticTasks);
 
@@ -191,7 +207,8 @@ class TaskManager {
                 new CountedTask("广告神通", 24408, { times: 1, isAd: true, isUseADTime: false }, 1000, 2),
                 new CountedTask("广告法宝", 26302, { drawTimes: 1, isAd: true, poolId: 1, isUseADTime: false }, 1000, 2),
                 new CountedTask("广告宗门", 211814, { isUseADTime: false }, 1000, 2),
-                new CountedTask("挑战妖王", 20733, {}, 1000, 8)
+                new CountedTask("广告聚灵阵", 207019, { isUseADTime: false }, 1000, 3),
+                new CountedTask("挑战妖王", 20733, {}, 1000, 8),
             );
             // initialTasks.push(new CountedTask("异兽入侵", 20215, {}, 1000, 5)); // 异兽入侵5次 - 需要切分身
         }
