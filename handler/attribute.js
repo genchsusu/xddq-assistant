@@ -202,11 +202,10 @@ class AttributeManager {
                 logger.debug(`[Server] [处理装备] 忙碌中，跳过处理`);
                 return;
             }
-
+    
             this.status = "busy"; // 锁定状态
             const items = body.undDealEquipmentDataMsg;
-            let processed = false;
-
+    
             for (let i = 0; i < items.length; i++) {
                 const equipment = items[i];
                 const fightValue = equipment.fightValue; // 该装备的妖力
@@ -215,48 +214,55 @@ class AttributeManager {
                 const quality = u.quality; // 该装备的品质
                 const attributeList = this.processAttributes(u.attributeList); // 使用转换后的属性列表
                 const equipmentId = u.equipmentId; // 该装备的装备id
-                // 根据equipmentId找到装备的类型
-                const equipmentType = this.dbMgr.getEquipment(equipmentId).type - 1;
-
-                if (this.separation) {
-                    const rule = account.chopTree.separation;
-
-                    const attackType = attributeList.attack.type;
-                    const defenseType = attributeList.defense.type;
-
-                    const {result , index } = this.checkMultipleConditions(attackType, [ attackType, defenseType], rule.condition)
-                    // 判断是否满足条件
-                    if (result) {
-                        // 质量 和 妖力*偏移量 均满足条件
-                        if (quality >= rule.quality && fightValue >= this.fightValueData[index] * (1 - rule.fightValueOffset)) {
-                            // 处理分身属性
-                            const existingAttributeList = this.processAttributes(this.equipmentData[index][equipmentType].attributeList);
-                            // 判断是否有更好的属性
-                            let betterAttributes = false;
-                            if (!rule.condition[index].includes(existingAttributeList.attack )) {
-                                betterAttributes = true;
-                            } else {
-                                betterAttributes = parseFloat(attributeList.attack.value) >= parseFloat(existingAttr.value) * (1 - rule.probOffset)
-                            }
-
-                            if (betterAttributes) {
-                                logger.info(`[装备] 分身${index} 符合条件 ${this.dbMgr.getEquipmentQuality(quality)} ${this.dbMgr.getEquipmentName(equipmentId)} ${this.dbMgr.getAttribute(attributeList.attack.type)}:${attributeList.attack.value/10} ${this.dbMgr.getAttribute(attributeList.defense.type)}:${attributeList.defense.value/10} 原来的属性 ${this.dbMgr.getAttribute(existingAttributeList.attack.type)}:${existingAttributeList.attack.value/10} ${this.dbMgr.getAttribute(existingAttributeList.defense.type)}:${existingAttributeList.defense.value/10}`);
-                                TaskManager.instance.add(Attribute.SwitchSeparation(index));
-                                TaskManager.instance.add(Attribute.DealEquipmentEnum_EquipAndResolveOld(id));
-                                TaskManager.instance.add(Attribute.FetchSeparation());
-                                processed = true;
-                            }
-                        }
-                    }
-                }
-
+                const equipmentData = this.dbMgr.getEquipment(equipmentId);
+                const equipmentName = equipmentData.name;
+                const equipmentType = equipmentData.type - 1;
+    
+                let processed = await this.processEquipment(quality, fightValue, attributeList, equipmentType, id, equipmentId);
+    
                 if (!processed) {
-                    logger.debug(`[装备] 分解 ${id} ${this.dbMgr.getEquipmentQuality(quality)} ${this.dbMgr.getEquipmentName(equipmentId)}`);
+                    logger.debug(`[装备] 分解 ${id} ${this.dbMgr.getEquipmentQuality(quality)} ${equipmentName}`);
                     TaskManager.instance.add(Attribute.DealEquipmentEnum_Resolve(id));
                 }
             }
             this.status = "idle"; // 解锁状态
         }
+    }
+    
+    async processEquipment(quality, fightValue, attributeList, equipmentType, id, equipmentId) {
+        if (this.separation) {
+            const rule = account.chopTree.separation;
+            const attackType = attributeList.attack.type;
+            const defenseType = attributeList.defense.type;
+    
+            const { result, index } = this.checkMultipleConditions(attackType, [attackType, defenseType], rule.condition);
+    
+            if (result) {
+                const existingAttributeList = this.processAttributes(this.equipmentData[index][equipmentType].attributeList);
+    
+                let betterAttributes = false;
+                if (
+                    quality >= rule.quality && 
+                    (
+                        (fightValue >= this.fightValueData[index] * (1 - rule.fightValueOffset) && parseFloat(attributeList.attack.value) >= parseFloat(existingAttributeList.attack.value)) || 
+                        (!rule.condition[index].includes(existingAttributeList.attack.type)) || 
+                        (parseFloat(attributeList.attack.value) >= parseFloat(existingAttributeList.attack.value) * (1 + rule.probOffset))
+                    )
+                ) {
+                    betterAttributes = true;
+                }
+    
+                if (betterAttributes) {
+                    logger.info(`[装备] 分身${index} 原装备 ${this.dbMgr.getEquipmentQuality(this.equipmentData[index][equipmentType].quality)} ${this.dbMgr.getEquipmentName(this.equipmentData[index][equipmentType].equipmentId)} ${this.dbMgr.getAttribute(existingAttributeList.attack.type)}:${existingAttributeList.attack.value / 10} ${this.dbMgr.getAttribute(existingAttributeList.defense.type)}:${existingAttributeList.defense.value / 10}`);
+                    logger.info(`[装备] 分身${index} 新装备 ${this.dbMgr.getEquipmentQuality(quality)} ${this.dbMgr.getEquipmentName(equipmentId)} ${this.dbMgr.getAttribute(attributeList.attack.type)}:${attributeList.attack.value / 10} ${this.dbMgr.getAttribute(attributeList.defense.type)}:${attributeList.defense.value / 10}`);
+                    TaskManager.instance.add(Attribute.SwitchSeparation(index));
+                    TaskManager.instance.add(Attribute.DealEquipmentEnum_EquipAndResolveOld(id));
+                    TaskManager.instance.add(Attribute.FetchSeparation());
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     handlerVip(body) {
@@ -336,7 +342,7 @@ class AttributeManager {
             } else {
                 logger.warn(`[砍树] 正在忙碌，跳过此次砍树`);
             }
-    
+
             if (this.chopTreeJob) {
                 setTimeout(chopTreeTask, 1000); // 每秒钟执行一次
             }
@@ -351,7 +357,7 @@ class AttributeManager {
             clearTimeout(this.chopTreeJob);
             this.chopTreeJob = null;
         }
-    }     
+    }
 
     calculateMultiplier(treeLevel) {
         if (treeLevel >= 22) {
