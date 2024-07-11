@@ -4,12 +4,16 @@ import { TaskManager, ImmediateTask, CountedTask } from "../modules/tasks.js";
 import { DBMgr } from "../modules/dbMgr.js";
 
 class Attribute {
-    static Chop(i, times = 1) {
-        return new ImmediateTask(`Chop${i}`, 20203, { auto: false, times: times });
+    static Chop(times = 1) {
+        return new ImmediateTask("Chop", 20203, { auto: false, times: times });
     }
 
     static CheckUnfinishedEquipment() {
         return new ImmediateTask("CheckUnfinishedEquipment", 20209, {});
+    }
+
+    static CheckUnfinishedTalent() {
+        return new ImmediateTask("CheckUnfinishedTalent", 20625, {});
     }
 
     static FetchSeparation() {
@@ -56,11 +60,12 @@ class Attribute {
         return new ImmediateTask("DealEquipmentEnum_EquipAndResolveOld", 20202, { type: 2, idList: [id] });
     }
 
-    static RandomTalentReq() {
-        return new ImmediateTask("RandomTalentReq", 20622, {randomTimes: 1 });
+    // 灵脉!!!!!!!!!!
+    static RandomTalentReq(times) {
+        return new ImmediateTask("RandomTalentReq", 20622, {randomTimes: times });
     }
 
-    // 装备并分解老的
+    // 装备
     static DealTalentEnum_Equip() {
         return new ImmediateTask("DealTalentEnum_Equip", 20623, {dealData: [{index: 0,type: 0}]});
     }
@@ -84,10 +89,14 @@ class AttributeManager {
         this.talentData = { 0: [], 1: [], 2: [] };
         this.fightValueData = { 0: [], 1: [], 2: [] };
         this.bagData = []; // Done
-        this.treeLevel = 0; // Done
-        this.chopTimes = 0; // Done
+        this.treeLevel = 1; // Done
+        this.chopTimes = 1; // Done
+        this.talentCreateLevel = 1; // 灵脉等级
+        this.talentCreateTimes = 1; // Done
         this.isMonthCardVip = false; // Done
         this.isYearCardVip = false; // Done
+        this.talentReqJob = null; // 用于存储 talentReq 的定时任务
+        this.previousFlowerNum = 0; // 用于存储上一次的灵脉花数量
         this.chopTreeJob = null; // 用于存储 chopTree 的定时任务
         this.previousPeachNum = 0; // 用于存储上一次的桃子数量
         // 🔒储存状态防止同时砍树和灵脉时候出现问题
@@ -114,10 +123,14 @@ class AttributeManager {
         this.talentData = { 0: [], 1: [], 2: [] };
         this.fightValueData = { 0: [], 1: [], 2: [] };
         this.bagData = [];
-        this.treeLevel = 0;
-        this.chopTimes = 0;
+        this.treeLevel = 1;
+        this.chopTimes = 1;
+        this.talentCreateLevel = 1;
+        this.talentCreateTimes = 1;
         this.isMonthCardVip = false;
         this.isYearCardVip = false;
+        this.talentReqJob = null;
+        this.previousFlowerNum = 0;
         this.chopTreeJob = null;
         this.previousPeachNum = 0;
         this.status = "idle";
@@ -143,6 +156,12 @@ class AttributeManager {
                 }
             });
         }
+    }
+
+    handlerTalentInit(body) {
+        logger.debug("[Server] [灵脉] 初始化灵脉数据");
+        this.talentCreateLevel = body.talentCreateLevel || 1;
+        this.calculateTalentMultiplier(this.talentCreateLevel);
     }
 
     handlerBag(body) {
@@ -219,7 +238,7 @@ class AttributeManager {
     async handlerEquipment(body) {
         if (body.ret === 0) {
             if (this.status === "busy") {
-                logger.debug(`[Server] [处理装备] 忙碌中，跳过处理`);
+                logger.debug(`[Server] 忙碌中，跳过处理`);
                 return;
             }
     
@@ -285,6 +304,37 @@ class AttributeManager {
         return false;
     }
 
+    async handlerTalent(body) {
+        if (body.ret === 0) {
+            if (this.status === "busy") {
+                logger.debug(`[Server] 忙碌中，跳过处理`);
+                return;
+            }
+    
+            this.status = "busy"; // 锁定状态
+            const items = body.unDealTalentDataMsg;
+    
+            for (let i = 0; i < items.length; i++) {
+                const talent = items[i];
+
+                const fightValue = talent.fightValue;    // 该装备的妖力
+                const quality = talent.quality;          // 该装备的品质
+                const level = talent.level;              // 该装备的等级
+                const talentId = talent.id;              // 该装备的talentId 没啥用 用于日志
+                const talentType = talent.type - 1;      // 灵脉的孔位
+                const attributeList = this.processTalentAttributes(talent.attributeData); // 使用转换后的属性列表
+    
+                // let processed = await this.processEquipment(quality, fightValue, attributeList, equipmentType, id, equipmentId);
+    
+                if (!processed) {
+                    logger.debug(`[装备] 分解 ${this.dbMgr.getEquipmentQuality(quality)} ${this.dbMgr.getEquipmentName(`Talent_Name-${talentId}`)}`);
+                    TaskManager.instance.add(Attribute.DealTalentEnum_Resolve());
+                }
+            }
+            this.status = "idle";
+        }
+    }
+
     handlerVip(body) {
         const monthlyCardExpired = this.isExpired(body.monthlyCardEndTime);
         const getMonthlyCardRewardToday = this.isToday(body.getMonthlyCardRewardTime);
@@ -347,20 +397,20 @@ class AttributeManager {
     doChopTree() {
         const chopTreeTask = async () => {
             if (this.status === "idle") {
-                const peach = this.findItemById(100004);
-                if (peach.num < account.chopTree.stop.peach || this.playerLevel == account.chopTree.stop.level) {
+                const item = this.findItemById(100004);
+                if (item.num < account.chopTree.stop.num || this.playerLevel == account.chopTree.stop.level) {
                     logger.warn(`[砍树] 停止任务`);
                     this.chopTreeJob = null;
                 } else {
-                    if (peach.num !== this.previousPeachNum) {
-                        logger.info(`[砍树] 执行砍树任务 还剩 ${peach.num} 桃子`);
-                        this.previousPeachNum = peach.num; // 更新上一次桃子数量
+                    if (item.num !== this.previousPeachNum) {
+                        logger.info(`[砍树] 还剩 ${item.num} 桃子`);
+                        this.previousPeachNum = item.num; // 更新上一次数量
                     }
-                    await TaskManager.instance.add(Attribute.Chop(peach.num, this.chopTimes));
+                    await TaskManager.instance.add(Attribute.Chop(this.chopTimes));
                     await TaskManager.instance.add(Attribute.CheckUnfinishedEquipment());
                 }
             } else {
-                logger.warn(`[砍树] 正在忙碌，跳过此次砍树`);
+                logger.warn(`[砍树] 正在忙碌，跳过`);
             }
 
             if (this.chopTreeJob) {
@@ -376,6 +426,52 @@ class AttributeManager {
         } else if (this.chopTreeJob) {
             clearTimeout(this.chopTreeJob);
             this.chopTreeJob = null;
+        }
+    }
+
+    doTalentReq() {
+        const talentReqTask = async () => {
+            if (this.status === "idle") {
+                const item = this.findItemById(100007);
+                if (item.num < account.talent.stop.num) {
+                    logger.warn(`[灵脉] 停止任务`);
+                    this.talentReqJob = null;
+                } else {
+                    if (item.num !== this.previousPeachNum) {
+                        logger.info(`[灵脉] 还剩 ${item.num} 灵脉花`);
+                        this.previousFlowerNum = item.num; // 更新上一次数量
+                    }
+                    await TaskManager.instance.add(Attribute.RandomTalentReq(this.talentCreateTimes));
+                    await TaskManager.instance.add(Attribute.CheckUnfinishedTalent());
+                }
+            } else {
+                logger.warn(`[灵脉] 正在忙碌，跳过`);
+            }
+
+            if (this.talentReqJob) {
+                setTimeout(talentReqTask, 1000); // 每秒钟执行一次
+            }
+        };
+    
+        if (account.switch.talent) {
+            if (this.talentReqJob) {
+                clearTimeout(this.talentReqJob);
+            }
+            this.talentReqJob = setTimeout(talentReqTask, 1000);
+        } else if (this.talentReqJob) {
+            clearTimeout(this.talentReqJob);
+            this.talentReqJob = null;
+        }
+    }
+
+    calculateTalentMultiplier(level) {
+        // level 大于40 为3次 20-39为2次 0-19为1次
+        if (level >= 40) {
+            this.talentCreateTimes = 3;
+        } else if (level >= 20) {
+            this.talentCreateTimes = 2;
+        } else {
+            this.talentCreateTimes = 1;
         }
     }
 
