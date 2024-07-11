@@ -161,8 +161,8 @@ class TaskManager {
             new RepeatedTask("TrainPupil", 211802, { isOneKey: 1 }, 600000), // 每10分钟重复执行
             new ImmediateTask("Separation", 20215, {}),   // 立即执行
             new ImmediateTask("CheckEmail", 20555, {}),   // 立即执行
-            new RepeatedTask("关卡挑战", 20402, {}, 60000 * 5),
-            new RepeatedTask("真火秘境", 25602, { "type": 1 }, 60000 * 5), // 每5分钟进行一次真火秘境挑战
+            new RepeatedTask("关卡挑战", 20402, {}, 1000 * 30), // 每10秒执行一次
+            new RepeatedTask("真火秘境", 25602, { "type": 1 }, 1000 * 30), // 每10秒执行一次
         ];
 
         const today = new Date().toISOString().slice(0, 10).replace(/-/g, '_');

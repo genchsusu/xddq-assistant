@@ -229,11 +229,9 @@ class AttributeManager {
                     if (result) {
                         // 质量 和 妖力*偏移量 均满足条件
                         if (quality >= rule.quality && fightValue >= this.fightValueData[index] * (1 - rule.fightValueOffset)) {
-                            // 判断是否有更好的属性
-
                             // 处理分身属性
                             const existingAttributeList = this.processAttributes(this.equipmentData[index][equipmentType].attributeList);
-
+                            // 判断是否有更好的属性
                             let betterAttributes = false;
                             if (!rule.condition[index].includes(existingAttributeList.attack )) {
                                 betterAttributes = true;
@@ -242,7 +240,7 @@ class AttributeManager {
                             }
 
                             if (betterAttributes) {
-                                logger.info(`[装备] 分身${index} 符合条件 ${this.dbMgr.getEquipmentQuality(quality)} ${this.dbMgr.getEquipmentName(equipmentId)}`);
+                                logger.info(`[装备] 分身${index} 符合条件 ${this.dbMgr.getEquipmentQuality(quality)} ${this.dbMgr.getEquipmentName(equipmentId)} ${this.dbMgr.getAttribute(attributeList.attack.type)}:${attributeList.attack.value/10} ${this.dbMgr.getAttribute(attributeList.defense.type)}:${attributeList.defense.value/10} 原来的属性 ${this.dbMgr.getAttribute(existingAttributeList.attack.type)}:${existingAttributeList.attack.value/10} ${this.dbMgr.getAttribute(existingAttributeList.defense.type)}:${existingAttributeList.defense.value/10}`);
                                 TaskManager.instance.add(Attribute.SwitchSeparation(index));
                                 TaskManager.instance.add(Attribute.DealEquipmentEnum_EquipAndResolveOld(id));
                                 TaskManager.instance.add(Attribute.FetchSeparation());
