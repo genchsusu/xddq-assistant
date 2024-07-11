@@ -55,6 +55,26 @@ class Attribute {
     static DealEquipmentEnum_EquipAndResolveOld(id) {
         return new ImmediateTask("DealEquipmentEnum_EquipAndResolveOld", 20202, { type: 2, idList: [id] });
     }
+
+    static RandomTalentReq() {
+        return new ImmediateTask("RandomTalentReq", 20622, {randomTimes: 1 });
+    }
+
+    // 装备并分解老的
+    static DealTalentEnum_Equip() {
+        return new ImmediateTask("DealTalentEnum_Equip", 20623, {dealData: [{index: 0,type: 0}]});
+    }
+
+    // 粉碎神通
+    static DealTalentEnum_Resolve() {
+        return new ImmediateTask("DealTalentEnum_Resolve", 20623, {dealData: [{index: 0,type: 1}]});
+    
+    }
+
+    // 装备并分解老的
+    static DealTalentEnum_EquipAndResolveOld() {
+        return new ImmediateTask("DealTalentEnum_EquipAndResolveOld", 20623, {dealData: [{index: 0,type: 2}]});
+    }
 }
 
 class AttributeManager {

@@ -39,6 +39,10 @@ function handleServerMessage(msgId, body) {
             logger.debug(`[Server] [背包数据]`);
             AttributeManager.instance.handlerBag(body);
             return;
+        case 622:
+            logger.debug(`[Server] [灵脉]`);
+            // AttributeManager.instance.handlerTalent(body);
+            return;
         case 651:
             logger.debug(`[Server] [游历]`);
             handlerDestiny(body);

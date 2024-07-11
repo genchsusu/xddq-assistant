@@ -4,18 +4,7 @@
 
 
 灵脉：
-1 砍灵脉
-    a 激发
-    20622 {randomTimes: 1}
-    会获得622
-    b 佩戴神通
-    20623 {dealData: [{index: 0,type: 0}]}
-    c 销毁神通
-    20623 {dealData: [{index: 0,type: 1}]}
-    d 替换并销毁老的
-    20623 {dealData: [{index: 0,type: 2}]}
-require(switchSeparation) && account.js rules
-
+获取当前灵脉等级 然后设置times 再分析622
 
 ------------------------------------------------------
 宗门:
