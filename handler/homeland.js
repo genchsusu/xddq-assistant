@@ -154,9 +154,7 @@ class HomelandManager {
     
         body.reward.forEach((i) => {
             const finishTime = new Date(parseInt(i.finishTime));
-    
-            const isOverTwoHours = (currentTime - finishTime) > 2 * 60 * 60 * 1000;
-    
+            const isOverTwoHours = (finishTime - currentTime) > 2 * 60 * 60 * 1000;
             if ((this.tempData.worker.energy > 30) && isOverTwoHours) { // 体力超过30且 & 任务完成超过2小时, 撤回并重新派遣
                 logger.info(`[福地] ${i.playerId.toString()}位置${i.pos}的任务已完成或超过2小时, 撤回并重新派遣!`);
                 TaskManager.instance.add(Homeland.Reset(i.playerId, i.pos));
