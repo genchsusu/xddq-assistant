@@ -8,7 +8,6 @@
         "#*": "./src/*"
     },
     "dependencies": {
-        "async": "^3.2.5",
         "axios": "^1.7.2",
         "crypto-js": "^4.2.0",
         "long": "^5.2.3",

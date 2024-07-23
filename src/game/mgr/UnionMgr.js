@@ -52,7 +52,7 @@ export default class UnionMgr {
         GameNetMgr.inst.sendPbMsg(Protocol.S_MALL_BUY_GOODS, { mallId: 230000002, count: 1, activityId: 0 }, null);
         logger.info("[妖盟管理] 妖盟买腾蛇信物");
         GameNetMgr.inst.sendPbMsg(Protocol.S_MALL_BUY_GOODS, { mallId: 230000012, count: 3, activityId: 0 }, null);
-        logger.info("[妖盟管理] 妖盟买腾蛇信物");
+        logger.info("[妖盟管理] 领取任务收益");
         GameNetMgr.inst.sendPbMsg(Protocol.S_UNION_GETDAILYTASK, { actIndex: 4 }, null);
     }
 
