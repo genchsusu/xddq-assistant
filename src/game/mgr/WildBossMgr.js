@@ -37,8 +37,8 @@ export default class WildBossMgr {
 
         if (this.getAdRewardTimes < this.AD_REWARD_DAILY_MAX_NUM && now - this.lastAdRewardTime >= this.AD_REWARD_CD) {
             // TODO 判断是否已开启仙宫
-            // if (!PalaceMgr.isMiracle && PalaceMgr.Enabled) {
-            if (!PalaceMgr.isMiracle) {
+            // if (!PalaceMgr.inst.checkIsMiracle && PalaceMgr.Enabled) {
+            if (!PalaceMgr.inst.checkIsMiracle) {
                 return;
             }
             logger.info(`[挑战妖王管理] 还剩 ${this.AD_REWARD_DAILY_MAX_NUM - this.getAdRewardTimes} 次`);

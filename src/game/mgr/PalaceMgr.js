@@ -3,9 +3,13 @@ import Protocol from "#game/net/Protocol.js";
 import logger from "#utils/logger.js";
 
 export default class PalaceMgr {
-    constructor() {}
+    constructor() {
+        this.isMiracle = false;
+    }
 
-    static isMiracle = false;
+    checkIsMiracle() {
+        return this.isMiracle;
+    }
 
     static get inst() {
         if (!this._instance) {
@@ -41,9 +45,9 @@ export default class PalaceMgr {
     checkMiracle(t) {
         if (t.miracleId !== 0) {
             logger.info(`[仙宫管理] 已膜拜成功`);
-            PalaceMgr.isMiracle = true;
+            this.isMiracle = true;
         } else {
-            PalaceMgr.isMiracle = false;
+            this.isMiracle = false;
             GameNetMgr.inst.sendPbMsg(Protocol.S_PALACE_SEND_GIFT_GET_REWARD, {titleId: 0, isRandom: 1}, null);
         }
     }

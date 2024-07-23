@@ -59,12 +59,11 @@ export default class UnionMgr {
     // 砍价
     cutPriceSyncData(t) {
         if (t) {
-            if (!t.records.find(record => record.userId === UserMgr.playerId)) {
+            if (!records.find(record => record.userId.toString() === UserMgr.playerId.toString())) {
                 logger.info(`[妖盟管理] ${UserMgr.nickName} 开始砍价`);
-                GameNetMgr.inst.sendPbMsg(Protocol.S_SPIRIT_DRAW, { bussinessId: t.bussinessId }, null);
+                GameNetMgr.inst.sendPbMsg(Protocol.S_CUT_PRICE_BARGAIN, { bussinessId: t.bussinessId }, null);
             }
-        }
-        
+        }      
     }
 
     fightBoss() {

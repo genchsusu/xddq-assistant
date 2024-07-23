@@ -101,7 +101,7 @@ class MsgRecvMgr {
     // 2124 妖盟数据 推送我的妖盟数据更新
     static MyUnionData(t) {
         logger.debug("[MsgRecvMgr] 妖盟数据同步");
-        UnionMgr.pushMyUnionDataBroadcast(t);
+        UnionMgr.inst.pushMyUnionDataBroadcast(t);
     }
 
     // 2165 妖盟砍价数据同步

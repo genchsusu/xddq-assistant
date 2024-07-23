@@ -44,8 +44,8 @@ export default class TowerMgr {
     processReward() {
         if (this.data.curPassId == 0 ) {
             // TODO 判断是否已开启仙宫
-            // if (!PalaceMgr.isMiracle && PalaceMgr.Enabled) {
-            if (!PalaceMgr.isMiracle) {
+            // if (!PalaceMgr.inst.checkIsMiracle && PalaceMgr.Enabled) {
+            if (!PalaceMgr.inst.checkIsMiracle) {
                 return;
             }
             logger.info("[镇妖塔管理] 开始领取镇妖塔奖励");

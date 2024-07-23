@@ -134,3 +134,4 @@ nodejs
 account.js
 
 test*
+.vscode
