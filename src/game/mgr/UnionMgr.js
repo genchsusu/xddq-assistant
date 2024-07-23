@@ -28,6 +28,10 @@ export default class UnionMgr {
         LoopMgr.inst.remove(this);
     }
 
+    inUnion() {
+        return this.unionId !== null; // 是否在妖盟中
+    }
+    
     collectPlayerData(data) {
         return data.map(member => ({
             userId: member.playerData.playerId,
