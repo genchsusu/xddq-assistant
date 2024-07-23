@@ -37,8 +37,8 @@ export default class UnionMgr {
 
     // 推送妖盟数据
     pushMyUnionDataBroadcast(t) {
-        this.unionId = t.unionId || null;
-        this.memberNum = t.memberNum || null;
+        this.unionId = t.baseData.unionId || null;
+        this.memberNum = t.baseData.memberNum || null;
         this.memberList = this.collectPlayerData(t.memberList) || [];
 
         logger.info("[妖盟管理] 妖盟广告");

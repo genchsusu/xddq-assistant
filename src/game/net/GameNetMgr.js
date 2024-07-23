@@ -17,11 +17,6 @@ class GameNetMgr {
         // Server
         this.net = new NetSocket();
         this.isLogined = false;
-        this._closed = false;
-        // Restart
-        this.maxReconnectNum = 2;
-        this.reConnectTimes = 0;
-        this.isReconnectNum = 0;
         // handlers
         this.handlers = {};
         // Msg
@@ -39,16 +34,15 @@ class GameNetMgr {
         this.playerId = playerId;
         this.token = token;
 
-        this._closed = false;
         this.net.initWithUrl(url);
         this.net.addHandler(this.ping.bind(this), this.parseArrayBuffMsg.bind(this));
 
         this.net.connect(this.netStateChangeHandler.bind(this));
         this.isLogined = true;
 
-        // 开始心跳
+        logger.debug("[WebSocket] 开始心跳");
         GameNetMgr.inst.net.heartbeatStart();
-        // 开始循环任务
+        logger.debug("[LoopMgr] 开始循环任务");
         LoopMgr.inst.start()
     }
 
@@ -69,62 +63,18 @@ class GameNetMgr {
     }
 
     netConnectHandler() {
-        this._closed = false;
-        this.reConnectTimes = 0;
-        this.isReconnectNum = 0;
         this.login();
         logger.info("[WebSocket] 连接成功");
     }
 
     netCloseHandler() {
         logger.error("[WebSocket] 已断开连接");
-        if (!this._closed) {
-            this.reConnectTimes += 1;
-            if (this.reConnectTimes <= 100) this.reConnect();
-        }
+        this.close();
     }
 
     netErrorHandler() {
         logger.error("[WebSocket] 连接错误");
-        this.reConnect();
-    }
-
-    reConnect() {
-        if (!this._closed) {
-
-            async.waterfall([
-                (callback) => {
-                    if (this.isReconnectNum < this.maxReconnectNum) {
-                        const delay = 1000 * this.isReconnectNum;
-                        this.isReconnectNum++;
-                        setTimeout(() => {
-                            logger.warn("[WebSocket] 开始重连");
-                            GameNetMgr.inst.net.reConnect();
-                            GameNetMgr.inst.handlers = {};
-                            callback(null, true);
-                        }, delay);
-                    } else {
-                        callback(null, false);
-                    }
-                },
-                (isReconnected, callback) => {
-                    if (isReconnected) {
-                        callback(null, isReconnected, false);
-                    } else {
-                        logger.error("[WebSocket] 重连超过次数");
-                    }
-                },
-                (isReconnected, callback) => {
-                    if (!isReconnected) {
-                        this.isReconnectNum = 0;
-                        this.close();
-                    }
-                    callback();
-                }
-            ], (err) => {
-                if (err) console.error(err);
-            });
-        }
+        this.close();
     }
 
     login() {
@@ -238,11 +188,10 @@ class GameNetMgr {
     }
 
     close() {
-        this._closed = true;
         if (this.net) {
             this.net.close(true);
         };
-        this.isReconnectNum = 0;
+        process.exit(1);
     }
 }
 

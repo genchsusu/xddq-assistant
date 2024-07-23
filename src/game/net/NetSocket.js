@@ -16,13 +16,11 @@ const WSState = {
 
 class NetSocket {
     constructor() {
-        this.sioIndex = 0;
         this.url = "";
         // Sio and state
         this.sio = null;
         this.connected = false;
         this.isConnecting = false;
-        this.isReConnecting = false;
         this.clearSio = false;
         this.isOnClose = false;
         this.netCallback = null;
@@ -42,10 +40,6 @@ class NetSocket {
     addHandler(ping, parseArrayBuffMsg) {
         this.ping = ping;
         this.parseArrayBuffMsg = parseArrayBuffMsg;
-    }
-
-    getIsReConnecting() {
-        return this.isReConnecting;
     }
 
     connect(callback) {
@@ -83,7 +77,6 @@ class NetSocket {
 
         this.sio.onmessage = (event) => {
             const data = event.data;
-            this.sizeOfResv += data.size;
             if (data && data !== "null") {
                 this.msgQueue.push(data);
                 this.readNextMsgData();
@@ -126,11 +119,6 @@ class NetSocket {
         logger.info("[WebSocket] 开始连接");
     }
 
-    reConnect() {
-        this.isReConnecting = true;
-        this.connect();
-    }
-
     close() {
         if (this.connected) {
             if (this.sio) {
@@ -155,10 +143,6 @@ class NetSocket {
     heartbeatStart() {
         if (!this.heartbeatFlag) {
             this.heartbeatFlag = true;
-            if (this.heartbeatTimeId !== null) {
-                clearInterval(this.heartbeatTimeId);
-                this.heartbeatTimeId = null;
-            }
             this.heartbeatTimeId = setInterval(() => {
                 if (this.sio && this.connected) {
                     if (this.ping) this.ping();
