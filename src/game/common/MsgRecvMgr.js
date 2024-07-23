@@ -162,7 +162,6 @@ class MsgRecvMgr {
     // 6301 玩家法宝数据同步
     static MagicTreasurePlayerDataMsg(t) {
         logger.debug("[MsgRecvMgr] 法宝数据同步");
-        // TODO: MagicTreasureMgr.inst.syncMagicTreasureDataMsg(t);
         MagicTreasureMgr.inst.checkReward(t);
     }
 

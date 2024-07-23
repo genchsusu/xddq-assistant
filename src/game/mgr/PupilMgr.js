@@ -40,6 +40,7 @@ export default class PupilMgr {
             .map((site) => site.index);
     }
 
+    // 自动检查能量 毕业弟子 Loop在CustomMgr中
     async checkGraduatation(t) {
         if (t.ret === 0) {
             // 判断是否可以招人
@@ -87,7 +88,6 @@ export default class PupilMgr {
             } else {
                 this.processReward();
             }
-            // TODO: 自动检查能量 毕业弟子
         } catch (error) {
             logger.error(`[宗门管理] loopUpdate error: ${error}`);
         } finally {

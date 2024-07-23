@@ -32,15 +32,33 @@ async function sleep(ms) {
 
     async function restartProcess() {
         if (childProcess) {
-            childProcess.kill(); // 杀死当前子进程
+            childProcess.kill();
             await new Promise((resolve) => {
-                childProcess.on("exit", resolve); // 确保子进程完全退出
+                childProcess.on("exit", resolve);
             });
         }
-        await sleep(reconnectInterval); // 确保子进程重启前有足够的时间间隔
+        await sleep(reconnectInterval);
         await runCmd();
     }
 
-    // 开始运行子进程
+    function calculateTimeoutToMidnight() {
+        const now = new Date();
+        const nextMidnight = new Date(now);
+        nextMidnight.setHours(0, 0, 0, 0);
+        nextMidnight.setDate(nextMidnight.getDate() + 1); // 设置为明天的 00:00
+        return nextMidnight - now;
+    }
+
+    function scheduleMidnightRestart() {
+        const timeout = calculateTimeoutToMidnight();
+        logger.info(`[守护] 将在 ${new Date(Date.now() + timeout).toLocaleString()} 重启`);
+        setTimeout(() => {
+            restartProcess().then(() => {
+                scheduleMidnightRestart();
+            });
+        }, timeout);
+    }
+
     await runCmd();
+    scheduleMidnightRestart();
 })();
