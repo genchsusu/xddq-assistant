@@ -21,7 +21,7 @@ async function sleep(ms) {
         });
 
         childProcess.on("exit", async () => {
-            logger.warn(`[守护] 子进程退出，${reconnectInterval / 1000} 秒后重启`);
+            logger.warn(`[守护] 子进程退出，将在 ${new Date(Date.now() + reconnectInterval).toLocaleString()} 重启`);
             restartProcess();
         });
 
@@ -33,9 +33,6 @@ async function sleep(ms) {
     async function restartProcess() {
         if (childProcess) {
             childProcess.kill();
-            await new Promise((resolve) => {
-                childProcess.on("exit", resolve);
-            });
         }
         await sleep(reconnectInterval);
         await runCmd();
@@ -45,7 +42,7 @@ async function sleep(ms) {
         const now = new Date();
         const nextMidnight = new Date(now);
         nextMidnight.setHours(0, 0, 0, 0);
-        nextMidnight.setDate(nextMidnight.getDate() + 1); // 设置为明天的 00:00
+        nextMidnight.setDate(nextMidnight.getDate() + 1); // 设置为每天的 00:00
         return nextMidnight - now;
     }
 

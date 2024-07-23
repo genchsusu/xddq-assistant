@@ -36,8 +36,6 @@ export default class HeroRankMgr {
                 this.buyNumDaily = this.buyNumMax;
             }
         }
-        // 群英镑商店买桃
-        GameNetMgr.inst.sendPbMsg(Protocol.S_MALL_BUY_GOODS, {mallId: 250000001, count: 1, activityId: 0}, null);    
     }
 
     findFirstHeroRankPlayer(body) {

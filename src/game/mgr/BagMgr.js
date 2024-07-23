@@ -37,6 +37,35 @@ export default class BagMgr {
         }
     }
 
+    isMallCountZero(mallBuyCountList, mallId) {
+        const mallItem = mallBuyCountList.find(item => item.mallId === mallId);
+        return mallItem ? mallItem.count === 0 : false;
+    }
+
+    checkBuyGoods(t) {
+        const mallBuyCountList = t.mallBuyCountList || [];
+        if (this.isMallCountZero(mallBuyCountList, 230000011)) {
+            logger.info("[妖盟管理] 妖盟买桃免费");
+            GameNetMgr.inst.sendPbMsg(Protocol.S_MALL_BUY_GOODS, { mallId: 230000011, count: 1, activityId: 0 }, null);
+        }
+        if (this.isMallCountZero(mallBuyCountList, 230000001)) {
+            logger.info("[妖盟管理] 妖盟买桃1");
+            GameNetMgr.inst.sendPbMsg(Protocol.S_MALL_BUY_GOODS, { mallId: 230000001, count: 1, activityId: 0 }, null);
+        }
+        if (this.isMallCountZero(mallBuyCountList, 230000002)) {
+            logger.info("[妖盟管理] 妖盟买桃2");
+            GameNetMgr.inst.sendPbMsg(Protocol.S_MALL_BUY_GOODS, { mallId: 230000002, count: 1, activityId: 0 }, null);
+        }
+        if (this.isMallCountZero(mallBuyCountList, 230000012)) {
+            logger.info("[妖盟管理] 妖盟买腾蛇信物");
+            GameNetMgr.inst.sendPbMsg(Protocol.S_MALL_BUY_GOODS, { mallId: 230000012, count: 3, activityId: 0 }, null);
+        }
+        if (this.isMallCountZero(mallBuyCountList, 250000001)) {
+            logger.info("[群英镑管理] 群英镑商店买桃");
+            GameNetMgr.inst.sendPbMsg(Protocol.S_MALL_BUY_GOODS, {mallId: 250000001, count: 1, activityId: 0}, null);
+        } 
+    }
+
     findItemById(id) {
         return this.bagData.find((item) => item.propId === id) || { num: 0 };
     }

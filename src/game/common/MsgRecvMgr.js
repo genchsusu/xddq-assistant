@@ -98,6 +98,12 @@ class MsgRecvMgr {
         SpiritMgr.inst.checkReward(t);
     }
 
+    // 2117 妖盟数据 同步妖盟任务
+    static RspUnionDailyTask(t) {
+        logger.debug("[MsgRecvMgr] 同步妖盟任务");
+        UnionMgr.inst.checkDailyTask(t);
+    }
+
     // 2124 妖盟数据 推送我的妖盟数据更新
     static MyUnionData(t) {
         logger.debug("[MsgRecvMgr] 妖盟数据同步");
@@ -110,16 +116,17 @@ class MsgRecvMgr {
         UnionMgr.inst.cutPriceSyncData(t);
     }
 
-    // // 5807 妖盟 妖邪讨伐同步boss信息
-    // static UnionBossMsg(t) {
-    //     logger.info("妖邪讨伐boss信息同步");
-    //     UnionMgr.inst.SyncUnionBossMsg(t);
-    // }
+    // 5801 主动请求布阵信息 满20层开打
+    static UnionBossInfoRespMsg(t) {
+        logger.debug("[MsgRecvMgr] 妖盟讨伐boss信息同步");
+        UnionMgr.inst.SyncUnionBossMsg(t);
+    }
 
-    // // 5808  妖盟 妖邪讨伐布阵信息同步 满20层开打
-    // static UnionBossBuff(t) {
-    //     UnionMgr.inst.SyncUnionBossBuffMsg(t);
-    // }
+    // 5803 妖盟讨伐boss战斗 是否可以领奖
+    static UnionBossRewardRespMsg(t) {
+        logger.debug("[MsgRecvMgr] 妖盟讨伐boss战斗结果");
+        UnionMgr.inst.BossReward();
+    }
 
     // 4802 仙宫点赞同步
     static PalaceWorshipRsp(t) {
@@ -187,6 +194,12 @@ class MsgRecvMgr {
     static MailListMsg(t) {
         logger.debug("[MsgRecvMgr] 一键领取邮件奖励");
         GameNetMgr.inst.sendPbMsg(Protocol.S_MAIL_GET_ALL_REWARD, {}, null);
+    }
+
+    // 602 是否能购买物品
+    static MallBuyCountListMsg(t) {
+        logger.debug("[MsgRecvMgr] 是否能购买物品");
+        BagMgr.inst.checkBuyGoods(t);
     }
 
     // 731 妖王数据同步
