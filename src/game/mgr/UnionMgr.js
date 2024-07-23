@@ -125,7 +125,7 @@ export default class UnionMgr {
             logger.debug("[妖盟管理] 妖盟讨伐 主动请求妖盟讨伐");
             GameNetMgr.inst.sendPbMsg(Protocol.S_UNION_BOSS_ENTER, {}, null);
 
-            logger.deubg("[妖盟管理] 妖盟讨伐 领取妖盟讨伐奖励");
+            logger.debug("[妖盟管理] 妖盟讨伐 领取妖盟讨伐奖励");
             GameNetMgr.inst.sendPbMsg(Protocol.S_UNION_BOSS_GET_REWARD_INFO, {}, null);
 
             logger.debug("[妖盟管理] 妖盟日常任务");
