@@ -86,8 +86,8 @@ export default class UnionMgr {
         }
 
         if (t.battleCount == 1) {
-            // logger.info("[妖盟管理] 妖盟讨伐 领取成就奖励");
-            // GameNetMgr.inst.sendPbMsg(Protocol.S_UNION_BOSS_RECEIVE_ACHIEVE_REWARD, {taskId: this.config.id}, null); // TODO
+            logger.info("[妖盟管理] 妖盟讨伐 领取成就奖励");
+            GameNetMgr.inst.sendPbMsg(Protocol.S_UNION_BOSS_RECEIVE_ACHIEVE_REWARD, {taskId: 180001}, null);
         }
     }
 
