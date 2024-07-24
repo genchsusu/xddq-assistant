@@ -9,6 +9,7 @@ async function sleep(ms) {
 (async () => {
     let childProcess;
     const reconnectInterval = account.reconnectInterval || 60 * 1000 * 5;
+    let isScheduledRestart = false; // 标志位
 
     async function runCmd() {
         childProcess = spawn("node", ["./src/index.js"], {
@@ -21,8 +22,10 @@ async function sleep(ms) {
         });
 
         childProcess.on("exit", async () => {
-            logger.warn(`[守护] 子进程退出，将在 ${new Date(Date.now() + reconnectInterval).toLocaleString()} 重启`);
-            restartProcess();
+            if (!isScheduledRestart) {
+                logger.warn(`[守护] 子进程退出，将在 ${new Date(Date.now() + reconnectInterval).toLocaleString()} 重启`);
+                restartProcess();
+            }
         });
 
         childProcess.on("error", (err) => {
@@ -32,7 +35,7 @@ async function sleep(ms) {
 
     async function restartProcess() {
         if (childProcess) {
-            childProcess.kill();
+            childProcess.kill("SIGKILL");
         }
         await sleep(reconnectInterval);
         await runCmd();
@@ -49,10 +52,11 @@ async function sleep(ms) {
     function scheduleMidnightRestart() {
         const timeout = calculateTimeoutToMidnight();
         logger.info(`[守护] 将在 ${new Date(Date.now() + timeout).toLocaleString()} 重启`);
-        setTimeout(() => {
-            restartProcess().then(() => {
-                scheduleMidnightRestart();
-            });
+        setTimeout(async () => {
+            isScheduledRestart = true; // 设置标志位，表示这是计划中的重启
+            await restartProcess();
+            isScheduledRestart = false; // 重置标志位
+            scheduleMidnightRestart();
         }, timeout);
     }
 
