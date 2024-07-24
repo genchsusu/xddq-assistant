@@ -175,7 +175,7 @@ class MsgRecvMgr {
     // 7001 聚灵阵状态
     static GatherEnergyEnterNewResp(t) {
         logger.debug("[MsgRecvMgr] 聚灵阵状态同步");
-        GatherEnergyMgr.inst.SyncGatherEnergyMsgState(t);
+        GatherEnergyMgr.inst.checkReward(t);
     }
 
     // 402 关卡挑战

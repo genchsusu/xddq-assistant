@@ -7,6 +7,9 @@ export default class GatherEnergyMgr {
     constructor() {
         this.AD_REWARD_DAILY_MAX_NUM = 3;   // 每日最大领取次数
         this.AD_REWARD_CD = 1000;           // 每次间隔时间
+        this.getAdRewardTimes = 0;          // 已领取次数, 默认为0, 防止夜间不work
+        this.lastAdRewardTime = 0;          // 上次领取时间
+
         this.isProcessing = false;
 
         LoopMgr.inst.add(this);
@@ -32,8 +35,8 @@ export default class GatherEnergyMgr {
     // }
     checkReward(t) {
         this.isProcessing = true;
+        logger.info(`[聚灵阵管理] 检查聚灵阵奖励`);
         this.getAdRewardTimes = t.gatherEnergy.getTimes || 0;
-        this.lastAdRewardTime = 0;
         this.isProcessing = false;
     }
 
