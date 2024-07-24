@@ -36,19 +36,26 @@ export default class PalaceMgr {
     }
 
     checkWorship(t) {
-        logger.debug(`[仙宫管理] 检查崇拜`);
+        logger.info("[仙宫管理] 检查崇拜");
         if (t.worship && t.worshipRandom) {
-            GameNetMgr.inst.sendPbMsg(Protocol.S_PALACE_SEND_GIFT_GET_REWARD, {titleId: 0, isRandom: 1}, null);
+            logger.info("[仙宫管理] 尝试今日点赞");
+            GameNetMgr.inst.sendPbMsg(Protocol.S_PALACE_WORSHIP, {titleId: 0, isRandom: 1}, null);
         }
+        t.palaceData.forEach((palace) => {
+            if (palace.worship) {
+                logger.info(`[仙宫管理] 处理崇拜标题ID: ${palace.titleId}`);
+                GameNetMgr.inst.sendPbMsg(Protocol.S_PALACE_WORSHIP, { titleId: palace.titleId, isRandom: 0 }, null);
+            }
+        });
     }
 
     checkMiracle(t) {
         if (t.miracleId !== 0) {
-            logger.info(`[仙宫管理] 已膜拜成功`);
+            logger.info("[仙宫管理] 已膜拜成功");
             this.isMiracle = true;
         } else {
-            this.isMiracle = false;
-            GameNetMgr.inst.sendPbMsg(Protocol.S_PALACE_SEND_GIFT_GET_REWARD, {titleId: 0, isRandom: 1}, null);
+            logger.info("[仙宫管理] 尝试今日点赞");
+            GameNetMgr.inst.sendPbMsg(Protocol.S_PALACE_WORSHIP, {titleId: 0, isRandom: 1}, null);
         }
     }
 }
