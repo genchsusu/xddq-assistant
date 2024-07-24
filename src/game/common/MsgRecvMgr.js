@@ -208,6 +208,12 @@ class MsgRecvMgr {
         WildBossMgr.inst.checkReward(t);
     }
 
+    // 732 妖王挑战结果
+    static WildBossChallengeResp(t) {
+        logger.debug("[MsgRecvMgr] 妖王挑战结果");
+        WildBossMgr.inst.challengeResult(t);
+    }
+
     // 761 镇妖塔数据同步
     static TowerDataMsg(t) {
         logger.debug("[MsgRecvMgr] 同步镇妖塔数据");

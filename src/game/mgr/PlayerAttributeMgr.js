@@ -2,7 +2,7 @@ import GameNetMgr from "#game/net/GameNetMgr.js";
 import Protocol from "#game/net/Protocol.js";
 import logger from "#utils/logger.js";
 import LoopMgr from "#game/common/LoopMgr.js";
-import { DBMgr } from "#game/common/DBMgr.js";
+import DBMgr from "#game/common/DBMgr.js";
 import BagMgr from "#game/mgr/BagMgr.js";
 import account from "../../../account.js";
 
@@ -59,7 +59,9 @@ export default class PlayerAttributeMgr {
 
     static isMonthCardVip = false;  // 月卡
     static isYearCardVip = false;   // 终身卡
-    static realmsId = 0;            // 等级
+    static level = 0;               // 玩家等级
+    static littleType = 0;          // 小境界
+    static bigType = 0;             // 大境界 
     static fightValue = 0;          // 妖力
 
     static get inst() {
@@ -75,9 +77,12 @@ export default class PlayerAttributeMgr {
 
     // 201 玩家属性信息同步
     SyncAttribute(t) {
-        PlayerAttributeMgr.realmsId = t.realmsId;
+        const realms = DBMgr.inst.getRealms(t.realmsId);
+        PlayerAttributeMgr.littleType = realms.littleType;
+        PlayerAttributeMgr.bigType = realms.bigType;
+        PlayerAttributeMgr.level = t.realmsId;
         PlayerAttributeMgr.fightValue = t.fightValue;
-        logger.info(`[属性管理] 等级: ${PlayerAttributeMgr.realmsId} 妖力: ${PlayerAttributeMgr.fightValue}`);
+        logger.info(`[属性管理] 等级: ${PlayerAttributeMgr.level} 境界: ${DBMgr.inst.getLanguageWord(realms.name)} 妖力: ${PlayerAttributeMgr.fightValue}`);
     }
 
     // 215 同步分身数据

@@ -97,4 +97,4 @@ class ProtobufMgr {
     }
 }
 
-export { ProtobufMgr };
+export default ProtobufMgr;

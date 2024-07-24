@@ -37,7 +37,8 @@ class DBMgr {
             'EquipmentQualityDB.json': 'EquipmentQualityDB',
             'LanguageWordDB.json': 'LanguageWordDB',
             'SpiritsDB.json': 'SpiritsDB',
-            'GameSkillDB.json': 'GameSkillDB'
+            'GameSkillDB.json': 'GameSkillDB',
+            'RealmsDB.json': 'RealmsDB'
         };
 
         try {
@@ -54,6 +55,14 @@ class DBMgr {
         }
     }
 
+    getRealms(id) {
+        return this.RealmsDB[id] || null;
+    }
+
+    getLanguageWord(id) {
+        return this.LanguageWordDB[id]?.zh_cn || '未知';
+    }
+
     getEquipment(id) {
         return this.EquipmentDB[id] || {};
     }
@@ -67,7 +76,7 @@ class DBMgr {
         if (!equipment) {
             return '未知装备';
         }
-        return this.LanguageWordDB[equipment]?.zh_cn || '未知装备';
+        return this.getLanguageWord(equipment);
     }
 
     getAttribute(id) {
@@ -75,4 +84,4 @@ class DBMgr {
     }
 }
 
-export { DBMgr };
+export default DBMgr;

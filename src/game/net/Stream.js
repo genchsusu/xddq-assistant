@@ -1,6 +1,6 @@
 import Long from 'long';
 import logger from "#utils/logger.js";
-import { ProtobufMgr } from './ProtobufMgr.js';
+import ProtobufMgr from '#game/net/ProtobufMgr.js';
 
 class Stream {
     constructor() {
@@ -222,4 +222,4 @@ class Stream {
     }
 }
 
-export { Stream };
+export default Stream;

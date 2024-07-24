@@ -1,6 +1,6 @@
 import logger from "#utils/logger.js";
-import { ProtobufMgr } from "#game/net/ProtobufMgr.js";
-import { DBMgr } from "#game/common/DBMgr.js";
+import ProtobufMgr from '#game/net/ProtobufMgr.js';
+import DBMgr from "#game/common/DBMgr.js";
 
 export default async () => {
     try {

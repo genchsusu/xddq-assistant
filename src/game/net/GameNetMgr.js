@@ -2,8 +2,8 @@
 import async from 'async';
 
 import Protocol from '#game/net/Protocol.js';
-import { Stream } from '#game/net/Stream.js';
-import { ProtobufMgr } from '#game/net/ProtobufMgr.js';
+import Stream from '#game/net/Stream.js';
+import ProtobufMgr from '#game/net/ProtobufMgr.js';
 import { NetSocket, NetState } from '#game/net/NetSocket.js';
 
 import logger from "#utils/logger.js";
