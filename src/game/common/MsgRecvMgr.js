@@ -256,17 +256,24 @@ class MsgRecvMgr {
         HeroRankMgr.inst.doFight(t);
     }
 
-    // 1002 活动 同步详细配置
-    static ActivityCommonDataListSync(t) {
-        logger.debug("[MsgRecvMgr] 同步活动详细");
+    // 1002 请求活动通用数据
+    static RspGetActivityDetail(t) {
+        logger.debug("[MsgRecvMgr] 请求活动通用数据");
         // ActivityMgr.inst.getReward(t); // 有问题
-        // ActivityMgr.inst.buyFree(t);   // 有问题
+        ActivityMgr.inst.buyFree(t);
     }
 
     // 1007 活动 增量同步活动数据 
     static ActivityConditionDataListSync(t) {
         logger.debug("[MsgRecvMgr] 增量同步数据");
         // ActivityMgr.inst.getReward(t); // 有问题
+    }
+
+    // 1003 活动 全量同步活动数据(领取东西逻辑放到这里)
+    static ActivityDataListSync(t) {
+        logger.debug("[MsgRecvMgr] 全量同步数据");
+        // ActivityMgr.inst.getReward(t); // 有问题
+        ActivityMgr.inst.buyFree(t.activity);
     }
 
     // 1051 同步福地鼠宝数据
