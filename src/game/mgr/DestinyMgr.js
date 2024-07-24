@@ -37,8 +37,8 @@ export default class DestinyMgr {
             const now = Date.now();
             if (now - this.lastAdRewardTime >= this.AD_REWARD_CD) {
                 logger.info(`[仙友管理] 进行游历`);
-                // 一键游历 等级达到练虚 156级开启 
-                GameNetMgr.inst.sendPbMsg(Protocol.S_DESTINY_TRAVEL, { isOneKey: PlayerAttributeMgr.realmsId >= 156 }, null);
+                // 一键游历 等级达到练虚
+                GameNetMgr.inst.sendPbMsg(Protocol.S_DESTINY_TRAVEL, { isOneKey: PlayerAttributeMgr.bigType >= 5 }, null);
                 this.lastAdRewardTime = now;
             }
         } catch (error) {
