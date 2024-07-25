@@ -213,7 +213,7 @@ export default class PlayerAttributeMgr {
 
     doChopTree() {
         const item = BagMgr.inst.findItemById(100004);
-        if (item.num < account.chopTree.stop.num || this.playerLevel == account.chopTree.stop.level) {
+        if (item.num < account.chopTree.stop.num || this.level <= account.chopTree.stop.level) {
             logger.warn(`[砍树] 停止任务`);
             this.chopEnabled = false;
             return;
