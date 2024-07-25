@@ -50,6 +50,9 @@ export default class PalaceMgr {
     }
 
     checkMiracle(t) {
+        if (this.isMiracle) {
+            return;
+        }
         if (t.miracleId !== 0) {
             logger.info("[仙宫管理] 已膜拜成功");
             this.isMiracle = true;
