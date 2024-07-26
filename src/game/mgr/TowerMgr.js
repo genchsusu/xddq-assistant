@@ -37,6 +37,10 @@ export default class TowerMgr {
             if (t.ret === 0) {
                 const currentStage = t.towerDataSync.curPassId % 10 === 0 ? 10 : t.towerDataSync.curPassId % 10;
                 logger.info(`[镇妖塔管理] ${t.allBattleRecord.isWin} ${Math.ceil(t.towerDataSync.curPassId / 10)}层${currentStage}关`);
+            } else {
+                // 失败说明需要一键选择Buff
+                GameNetMgr.inst.sendPbMsg(Protocol.S_TOWER_SELECT_BUFF, {index: 0, isOneKey: true}, null);
+                GameNetMgr.inst.sendPbMsg(Protocol.S_TOWER_CHALLENGE, {index: 0, isOneKey: true}, null);
             }
         }
     }
