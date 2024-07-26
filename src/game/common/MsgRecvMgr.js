@@ -256,21 +256,37 @@ class MsgRecvMgr {
         HeroRankMgr.inst.doFight(t);
     }
 
-    // 1002 请求活动通用数据
-    static RspGetActivityDetail(t) {
-        logger.debug("[MsgRecvMgr] 请求活动通用数据");
+    // 1001 活动通用数据同步
+    static PushActivityList(t) {
+        logger.debug("[MsgRecvMgr] 活动通用数据同步");
+        for (const i of t.mainConfig) {
+            GameNetMgr.inst.sendPbMsg(Protocol.S_ACTIVITY_GET_DATA, { activityId: i.activityId }, null);
+        }
+    }
+
+    // 1002 同步活动详细配置
+    static ActivityCommonDataListSync(t) {
+        logger.debug("[MsgRecvMgr] 同步活动详细配置");
+        for (const i of t.activityDataList) {
+            const activityId = i.activityId;
+            // 如果 i.detailConfig.commonConfig 中包含mallConfig
+            if (i.detailConfig.commonConfig.mallConfig) {
+                GameNetMgr.inst.sendPbMsg(Protocol.S_ACTIVITY_GET_DATA, { activityId: activityId }, null);
+            }
+        }
         // ActivityMgr.inst.getReward(t); // 有问题
-        ActivityMgr.inst.buyFree(t);
     }
 
     // 1007 活动 增量同步活动数据 
     static ActivityConditionDataListSync(t) {
         logger.debug("[MsgRecvMgr] 增量同步数据");
-        // ActivityMgr.inst.getReward(t); // 有问题
+        for (const i of t.activityConditionDataList) {
+            GameNetMgr.inst.sendPbMsg(Protocol.S_ACTIVITY_GET_DATA, { activityId: i.activityId }, null);
+        }
     }
 
     // 1003 活动 全量同步活动数据(领取东西逻辑放到这里)
-    static ActivityDataListSync(t) {
+    static RspGetActivityDetail(t) {
         logger.debug("[MsgRecvMgr] 全量同步数据");
         // ActivityMgr.inst.getReward(t); // 有问题
         ActivityMgr.inst.buyFree(t.activity);

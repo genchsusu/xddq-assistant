@@ -30,33 +30,34 @@ export default class ActivityMgr {
         }
     }
 
-    // 1003 也有这个...
-
-    // 1002 1003
+    // 1003
     buyFree(t) {
         const acts = t.activityDataList;
-        if (acts) {
-            for (const i of acts) {
-                
-                const mallConfig = i.detailConfig.commonConfig.mallConfig || null;
-                if (mallConfig) {
-                    // 100000=0 表示免费领取 有就领
-                    mallConfig.filter((item) => item.mallTempMsg.price === "100000=0").map((item) => {
-                        const activityId = item.activityId;
-                        const id = item.mallTempMsg.id;
-                        const buyLimit = item.mallTempMsg.buyLimit;
-                        const name = item.mallTempMsg.name;
-                        i.mallBuyCountList.forEach((j) => {
-                            if (j.mallId === id && parseInt(j.count) < buyLimit) {
-                                logger.info(`[活动管理] ${activityId} 购买 ${name} ${buyLimit}次`);
-                                for (let i = 0; i < buyLimit - j.count; i++) {
-                                    GameNetMgr.inst.sendPbMsg(Protocol.S_ACTIVITY_BUY_MALL_GOODS, { activityId: activityId, mallId: id, count: "1" }, null);
-                                }
-                            }
-                        });
-                    });
+        if (!acts) return;
+    
+        acts.forEach(i => {
+            const mallConfig = i.detailConfig?.commonConfig?.mallConfig || [];
+            mallConfig.filter(item => item.mallTempMsg.price === "100000=0").forEach(item => {
+                const activityId = item.activityId;
+                const { id, buyLimit, name } = item.mallTempMsg;
+    
+                const logAndBuy = (remaining) => {
+                    logger.info(`[活动管理] ${activityId} 购买 ${name} ${remaining}次`);
+                    for (let i = 0; i < remaining; i++) {
+                        GameNetMgr.inst.sendPbMsg(Protocol.S_ACTIVITY_BUY_MALL_GOODS, { activityId, mallId: id, count: "1" }, null);
+                    }
+                };
+    
+                if (!i.mallBuyCountList || i.mallBuyCountList.length === 0) {
+                    logAndBuy(buyLimit);
+                } else {
+                    const boughtItem = i.mallBuyCountList.find(j => j.mallId === id);
+                    const boughtCount = boughtItem ? boughtItem.count.toNumber() : 0;
+                    if (boughtCount < buyLimit) {
+                        logAndBuy(buyLimit - boughtCount);
+                    }
                 }
-            }
-        }
+            });
+        });
     }
 }
