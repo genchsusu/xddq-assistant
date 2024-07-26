@@ -33,11 +33,13 @@ async function sleep(ms) {
         });
     }
 
-    async function restartProcess() {
+    async function restartProcess(isScheduledRestart = false) {
         if (childProcess) {
             childProcess.kill("SIGKILL");
         }
-        await sleep(reconnectInterval);
+        if (!isScheduledRestart) {
+            await sleep(reconnectInterval);
+        }
         await runCmd();
     }
 
@@ -54,7 +56,7 @@ async function sleep(ms) {
         logger.info(`[守护] 将在 ${new Date(Date.now() + timeout).toLocaleString()} 重启`);
         setTimeout(async () => {
             isScheduledRestart = true; // 设置标志位，表示这是计划中的重启
-            await restartProcess();
+            await restartProcess(isScheduledRestart);
             isScheduledRestart = false; // 重置标志位
             scheduleMidnightRestart();
         }, timeout);

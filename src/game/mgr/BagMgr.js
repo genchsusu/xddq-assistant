@@ -43,9 +43,10 @@ export default class BagMgr {
         return mallItem ? mallItem.count === 0 : false;
     }
 
-    checkBuyGoods(t) {
+    async checkBuyGoods(t) {
         const mallBuyCountList = t.mallBuyCountList || [];
         if (UnionMgr.inst.inUnion()) {
+            await new Promise((resolve) => setTimeout(resolve, 60 * 1000));
             if (this.isMallCountZero(mallBuyCountList, 230000011)) {
                 logger.info("[自动买买买] 妖盟商店 买桃免费");
                 GameNetMgr.inst.sendPbMsg(Protocol.S_MALL_BUY_GOODS, { mallId: 230000011, count: 1, activityId: 0 }, null);
