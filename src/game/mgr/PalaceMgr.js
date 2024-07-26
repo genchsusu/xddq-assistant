@@ -36,7 +36,7 @@ export default class PalaceMgr {
     }
 
     checkWorship(t) {
-        logger.info("[仙宫管理] 检查崇拜");
+        logger.debug("[仙宫管理] 检查崇拜");
         if (t.worship && t.worshipRandom) {
             logger.info("[仙宫管理] 尝试今日点赞");
             GameNetMgr.inst.sendPbMsg(Protocol.S_PALACE_WORSHIP, {titleId: 0, isRandom: 1}, null);
