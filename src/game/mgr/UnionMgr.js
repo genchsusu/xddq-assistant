@@ -3,6 +3,7 @@ import Protocol from "#game/net/Protocol.js";
 import logger from "#utils/logger.js";
 import LoopMgr from "#game/common/LoopMgr.js";
 import UserMgr from "#game/mgr/UserMgr.js";
+import BagMgr from "#game/mgr/BagMgr.js";
 
 export default class UnionMgr {
     constructor() {
@@ -45,9 +46,32 @@ export default class UnionMgr {
         this.memberNum = t.baseData.memberNum || null;
         this.memberList = this.collectPlayerData(t.memberList) || [];
 
-        logger.info("[妖盟管理] 妖盟广告");
-        GameNetMgr.inst.sendPbMsg(Protocol.S_WATCH_AD_TASK, { activityId: 0, conditionId: 120006, isUseADTime: false }, null);
-        GameNetMgr.inst.sendPbMsg(Protocol.S_TASK_GET_REWARD, { taskId: [120006] }, null);
+        if (this.inUnion()) {
+            logger.info("[妖盟管理] 妖盟广告");
+            GameNetMgr.inst.sendPbMsg(Protocol.S_WATCH_AD_TASK, { activityId: 0, conditionId: 120006, isUseADTime: false }, null);
+            GameNetMgr.inst.sendPbMsg(Protocol.S_TASK_GET_REWARD, { taskId: [120006] }, null);
+
+            if (BagMgr.inst.isMallCountZero(230000011)) {
+                logger.info("[自动买买买] 妖盟商店 买桃免费");
+                GameNetMgr.inst.sendPbMsg(Protocol.S_MALL_BUY_GOODS, { mallId: 230000011, count: 1, activityId: 0 }, null);
+                BagMgr.inst.setMallCount(230000011, 1);
+            }
+            if (BagMgr.inst.isMallCountZero(230000001)) {
+                logger.info("[自动买买买] 妖盟商店 买桃1");
+                GameNetMgr.inst.sendPbMsg(Protocol.S_MALL_BUY_GOODS, { mallId: 230000001, count: 1, activityId: 0 }, null);
+                BagMgr.inst.setMallCount(230000001, 1);
+            }
+            if (BagMgr.inst.isMallCountZero(230000002)) {
+                logger.info("[自动买买买] 妖盟商店 买桃2");
+                GameNetMgr.inst.sendPbMsg(Protocol.S_MALL_BUY_GOODS, { mallId: 230000002, count: 1, activityId: 0 }, null);
+                BagMgr.inst.setMallCount(230000002, 1);
+            }
+            if (BagMgr.inst.isMallCountZero(230000012)) {
+                logger.info("[自动买买买] 妖盟商店 买腾蛇信物");
+                GameNetMgr.inst.sendPbMsg(Protocol.S_MALL_BUY_GOODS, { mallId: 230000012, count: 3, activityId: 0 }, null);
+                BagMgr.inst.setMallCount(230000012, 3);
+            }
+        }
     }
 
     // 砍价
@@ -58,10 +82,10 @@ export default class UnionMgr {
                 GameNetMgr.inst.sendPbMsg(Protocol.S_CUT_PRICE_BARGAIN, { bussinessId: t.bussinessId }, null);
             }
 
-            // if (t.status == 1 && parseInt(t.bargainPrice) > 2888 && t.bargainTimes == t.bargainNum) {
-            //     logger.info(`[妖盟管理] 砍到最低价，开始购买`);
-            //     GameNetMgr.inst.sendPbMsg(Protocol.S_CUT_PRICE_BUY, { bussinessId: t.bussinessId }, null);
-            // }
+            if (t.status == 1 && t.bargainPrice.toNumber() >= 2888 && t.bargainTimes == t.bargainNum) {
+                logger.info(`[妖盟管理] 砍到最低价，开始购买`);
+                GameNetMgr.inst.sendPbMsg(Protocol.S_CUT_PRICE_BUY, { bussinessId: t.bussinessId }, null);
+            }
         }      
     }
 

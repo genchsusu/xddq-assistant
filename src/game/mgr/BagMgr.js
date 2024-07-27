@@ -8,6 +8,7 @@ import UnionMgr from "./UnionMgr.js";
 export default class BagMgr {
     constructor() {
         this.bagData = [];
+        this.mallBuyCountList = [];
         this.isProcessing = false;
         LoopMgr.inst.add(this);
     }
@@ -38,36 +39,27 @@ export default class BagMgr {
         }
     }
 
-    isMallCountZero(mallBuyCountList, mallId) {
-        const mallItem = mallBuyCountList.find(item => item.mallId === mallId);
+    setMallCount(mallId, count) {
+        const mallItem = this.mallBuyCountList.find(item => item.mallId === mallId);
+        if (mallItem) {
+            mallItem.count = count;
+        } else {
+            this.mallBuyCountList.push({ mallId, count });
+        }
+    }
+
+    isMallCountZero(mallId) {
+        const mallItem = this.mallBuyCountList.find(item => item.mallId === mallId);
         return mallItem ? mallItem.count === 0 : false;
     }
 
     checkBuyGoods(t) {
-        const mallBuyCountList = t.mallBuyCountList || [];
-        if (UnionMgr.inst.inUnion()) {
-            if (this.isMallCountZero(mallBuyCountList, 230000011)) {
-                logger.info("[自动买买买] 妖盟商店 买桃免费");
-                GameNetMgr.inst.sendPbMsg(Protocol.S_MALL_BUY_GOODS, { mallId: 230000011, count: 1, activityId: 0 }, null);
-            }
-            if (this.isMallCountZero(mallBuyCountList, 230000001)) {
-                logger.info("[自动买买买] 妖盟商店 买桃1");
-                GameNetMgr.inst.sendPbMsg(Protocol.S_MALL_BUY_GOODS, { mallId: 230000001, count: 1, activityId: 0 }, null);
-            }
-            if (this.isMallCountZero(mallBuyCountList, 230000002)) {
-                logger.info("[自动买买买] 妖盟商店 买桃2");
-                GameNetMgr.inst.sendPbMsg(Protocol.S_MALL_BUY_GOODS, { mallId: 230000002, count: 1, activityId: 0 }, null);
-            }
-            if (this.isMallCountZero(mallBuyCountList, 230000012)) {
-                logger.info("[自动买买买] 妖盟商店 买腾蛇信物");
-                GameNetMgr.inst.sendPbMsg(Protocol.S_MALL_BUY_GOODS, { mallId: 230000012, count: 3, activityId: 0 }, null);
-            }
-        }
-
-        if (this.isMallCountZero(mallBuyCountList, 250000001)) {
+        this.mallBuyCountList = t.mallBuyCountList || [];
+        if (this.isMallCountZero(250000001)) {
             logger.info("[自动买买买] 群英镑商店 买桃");
-            GameNetMgr.inst.sendPbMsg(Protocol.S_MALL_BUY_GOODS, {mallId: 250000001, count: 1, activityId: 0}, null);
-        } 
+            GameNetMgr.inst.sendPbMsg(Protocol.S_MALL_BUY_GOODS, { mallId: 250000001, count: 1, activityId: 0 }, null);
+            this.setMallCount(250000001, 1); // 更新购买数量
+        }
     }
 
     findItemById(id) {

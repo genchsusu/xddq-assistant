@@ -9,6 +9,7 @@ async function sleep(ms) {
 (async () => {
     let childProcess;
     const reconnectInterval = account.reconnectInterval || 60 * 1000 * 5;
+    const scheduleTimeout = 10 * 1000; // 10s
     let isScheduledRestart = false; // 标志位
 
     async function runCmd() {
@@ -33,12 +34,14 @@ async function sleep(ms) {
         });
     }
 
-    async function restartProcess(isScheduledRestart = false) {
+    async function restartProcess() {
         if (childProcess) {
             childProcess.kill("SIGKILL");
         }
         if (!isScheduledRestart) {
             await sleep(reconnectInterval);
+        } else {
+            await sleep(scheduleTimeout);
         }
         await runCmd();
     }
@@ -55,11 +58,11 @@ async function sleep(ms) {
         const timeout = calculateTimeoutToMidnight();
         logger.info(`[守护] 将在 ${new Date(Date.now() + timeout).toLocaleString()} 重启`);
         setTimeout(async () => {
-            isScheduledRestart = true; // 设置标志位，表示这是计划中的重启
-            await restartProcess(isScheduledRestart);
+            isScheduledRestart = true;  // 设置标志位，表示这是计划中的重启
+            await restartProcess();
             isScheduledRestart = false; // 重置标志位
             scheduleMidnightRestart();
-        }, timeout);
+        }, timeout - scheduleTimeout);
     }
 
     await runCmd();
