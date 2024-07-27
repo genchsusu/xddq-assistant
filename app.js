@@ -41,7 +41,7 @@ async function sleep(ms) {
         if (!isScheduledRestart) {
             await sleep(reconnectInterval);
         } else {
-            await sleep(scheduleTimeout);
+            await sleep(scheduleTimeout * 2);
         }
         await runCmd();
     }

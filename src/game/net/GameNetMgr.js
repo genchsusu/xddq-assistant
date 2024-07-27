@@ -1,6 +1,3 @@
-
-import async from 'async';
-
 import Protocol from '#game/net/Protocol.js';
 import Stream from '#game/net/Stream.js';
 import ProtobufMgr from '#game/net/ProtobufMgr.js';
@@ -144,7 +141,7 @@ class GameNetMgr {
             const length = stream.readInt();
             const msgId = stream.readInt();
 
-            const protoMsg = ProtobufMgr.inst.getMsg(msgId, false, true);
+            const protoMsg = ProtobufMgr.inst.getMsg(msgId, false);
             const msgBody = new Uint8Array(arrayBuffer.subarray(NetSocket.BYTES_OF_MSG_HEADER, length));
 
             if (protoMsg) {
