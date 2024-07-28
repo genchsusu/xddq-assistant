@@ -172,19 +172,28 @@ export default class AuthService {
 
             const secondResponse = await this.secondRequest(username, ptoken);
             if (secondResponse.code === 1) {
-                const token = secondResponse.data.app_pst;
+                const app_pst = secondResponse.data.app_pst;
 
-                const thirdResponse = await this.thirdRequest(serverId, token, uid, username);
-
-                if (thirdResponse.ret !== 0) {
-                    throw new Error("登陆失败");
-                }
-                logger.info(`登录成功, ${JSON.stringify(thirdResponse, null, "\t")}`);
-    
+                const thirdResponse = await this.LoginWithToken(serverId, app_pst, uid, username);
                 return thirdResponse;
             } else {
                 throw new Error("登陆失败");
             }
+        } catch (error) {
+            throw new Error(error.message || "登陆失败");
+        }
+    }
+
+    async LoginWithToken(serverId, app_pst, uid, username) {
+        try {
+            const thirdResponse = await this.thirdRequest(serverId, app_pst, uid, username);
+        
+            if (thirdResponse.ret !== 0) {
+                throw new Error("登陆失败");
+            }
+            logger.info(`登录成功, ${JSON.stringify(thirdResponse, null, "\t")}`);
+        
+            return thirdResponse;
         } catch (error) {
             throw new Error(error.message || "登陆失败");
         }

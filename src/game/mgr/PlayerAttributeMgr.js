@@ -9,7 +9,7 @@ import account from "../../../account.js";
 class Attribute {
     static Chop(times = 1) {
         logger.debug(`[砍树] 砍树 ${times} 次`);
-        return GameNetMgr.inst.sendPbMsg(Protocol.S_ATTRIBUTE_DREAM_MSG, { auto: false, times: times }, null);
+        return GameNetMgr.inst.sendPbMsg(Protocol.S_ATTRIBUTE_DREAM_MSG, { auto: true, attr: [account.chopTree.separation.condition.flat()], times: times }, null);
     }
 
     static CheckUnfinishedEquipment() {
@@ -27,9 +27,9 @@ class Attribute {
         return GameNetMgr.inst.sendPbMsg(Protocol.S_ATTRIBUTE_SWITCH_SEPARATION_REQ, { separationIdx: idx }, null);
     }
 
-    static DealEquipmentEnum_Resolve(id) {
+    static DealEquipmentEnum_Resolve(idList) {
         logger.debug(`粉碎装备`);
-        return GameNetMgr.inst.sendPbMsg(Protocol.S_ATTRIBUTE_EQUIPMENT_DEAL_MSG, { type: 1, idList: [id] }, null);
+        return GameNetMgr.inst.sendPbMsg(Protocol.S_ATTRIBUTE_EQUIPMENT_DEAL_MSG, { type: 1, idList: idList }, null);
     }
 
     static DealEquipmentEnum_EquipAndResolveOld(id) {
@@ -43,11 +43,18 @@ export default class PlayerAttributeMgr {
         this.AD_REWARD_DAILY_MAX_NUM = 8;                           // 每日最大领取次数
         this.AD_REWARD_CD = 30 * 60 * 1000;                         // 每次间隔时间 (30分钟)
         this.separation = false;                                    // 是否有分身
+        this.separationNames = {
+            0: "元体",
+            1: "阳神",
+            2: "阴身"
+        };
         this.equipmentData = { 0: [], 1: [], 2: [] };
-        this.fightValueData = { 0: [], 1: [], 2: [] };
         this.treeLevel = 1;                                         // 树等级
+        this.treeInitialize = false;                                // 树是否初始化
         this.chopTimes = 1;                                         // 根据树等级计算砍树次数
+        this.useSeparationIdx = null;                               // 使用的分身
 
+        this.unDealEquipmentDataMsg = [];                           // 未处理装备数据
         this.chopEnabled = account.switch.chopTree || false;        // 用于存储 chopTree 的定时任务
         this.previousPeachNum = 0;                                  // 用于存储上一次的桃子数量
 
@@ -82,6 +89,9 @@ export default class PlayerAttributeMgr {
         PlayerAttributeMgr.bigType = realms.bigType;
         PlayerAttributeMgr.level = t.realmsId;
         PlayerAttributeMgr.fightValue = t.fightValue;
+        if (t.useSeparationIdx !== null) {
+            this.useSeparationIdx = t.useSeparationIdx;
+        }
         logger.info(`[属性管理] 等级: ${PlayerAttributeMgr.level} 境界: ${DBMgr.inst.getLanguageWord(realms.name)} 妖力: ${PlayerAttributeMgr.fightValue}`);
     }
 
@@ -95,10 +105,6 @@ export default class PlayerAttributeMgr {
             t.useSeparationDataMsg.forEach((data) => {
                 if (data.hasOwnProperty("index")) {
                     this.equipmentData[data.index] = data.equipmentList || [];
-                    this.fightValueData[data.index] = data.fightValue || [];
-                    if (!this.fightValueData[data.index]) {
-                        throw new Error("获取妖力失败");
-                    }
                 }
             });
         }
@@ -113,95 +119,108 @@ export default class PlayerAttributeMgr {
             }
 
             this.isProcessing = true;
-            const items = t.undDealEquipmentDataMsg;
+            this.unDealEquipmentDataMsg = t.undDealEquipmentDataMsg; // 就是这样写的...
 
-            for (let i = 0; i < items.length; i++) {
-                const equipment = items[i];
-                const fightValue = equipment.fightValue; // 该装备的妖力
+            const listResolve = [];
+            
+            for (let i = 0; i < this.unDealEquipmentDataMsg.length; i++) {
+                const equipment = this.unDealEquipmentDataMsg[i];
                 const u = equipment.unDealEquipmentData; // 该装备的未处理数据
                 const id = u.id; // 该装备的id
                 const quality = u.quality; // 该装备的品质
+                const level = u.level; // 该装备的等级
                 const attributeList = this.processAttributes(u.attributeList); // 使用转换后的属性列表
                 const equipmentId = u.equipmentId; // 该装备的装备id
                 const equipmentData = DBMgr.inst.getEquipment(equipmentId);
                 const equipmentName = equipmentData.name;
                 const equipmentType = equipmentData.type - 1;
 
-                let processed = await this.processEquipment(quality, fightValue, attributeList, equipmentType, id, equipmentId);
+                let processed = await this.processEquipment(quality, level, attributeList, equipmentType, id, equipmentId);
 
                 if (!processed) {
                     logger.debug(`[装备] 分解 ${id} ${DBMgr.inst.getEquipmentQuality(quality)} ${equipmentName}`);
-                    Attribute.DealEquipmentEnum_Resolve(id);
+                    listResolve.push(id);
                 }
+            }
+
+            if (listResolve.length > 0) {
+                Attribute.DealEquipmentEnum_Resolve(listResolve);
             }
             this.isProcessing = false;
         }
     }
 
-    async processEquipment(quality, fightValue, attributeList, equipmentType, id, equipmentId) {
+    haveUnDealEquipment() {
+        return this.unDealEquipmentDataMsg.length > 0
+    }
+
+    async processEquipment(quality, level, attributeList, equipmentType, id, equipmentId) {
         if (this.separation) {
+            const showResult = account.chopTree.showResult || false;
             const rule = account.chopTree.separation;
             const attackType = attributeList.attack.type;
             const defenseType = attributeList.defense.type;
+            let originalEquipmentDesc;
+            const newEquipmentDesc = `${DBMgr.inst.getEquipmentQuality(quality)} ${DBMgr.inst.getEquipmentName(equipmentId)} ${DBMgr.inst.getAttribute(attackType)}:${attributeList.attack.value / 10} ${DBMgr.inst.getAttribute(defenseType)}:${attributeList.defense.value / 10}`;
 
             const { result, index } = this.checkMultipleConditions(attackType, [attackType, defenseType], rule.condition);
-
-            if (account.chopTree.showResult) {
-                if (quality >= rule.quality) {
-                    logger.info(
-                        `[装备] 新装备 ${DBMgr.inst.getEquipmentQuality(quality)} ${DBMgr.inst.getEquipmentName(
-                            equipmentId
-                        )} ${DBMgr.inst.getAttribute(attackType)}:${attributeList.attack.value / 10} ${DBMgr.inst.getAttribute(
-                            defenseType
-                        )}:${attributeList.defense.value / 10}`
-                    );
-                } else {
-                    logger.info("[装备] 新装备品质过差");
-                }
-            }
 
             if (result) {
                 let betterAttributes = false;
                 let existingAttributeList = null;
                 let existingExist = true;
+
+                // 如果分身没装备就直接穿上
                 if (!this.equipmentData[index][equipmentType]) {
                     betterAttributes = true;
                     existingExist = false;
-                    logger.warn(`[装备] 分身${index} 无原装备`);
+                    logger.warn(`[装备] 分身${this.separationNames[index]} 无原装备`);
                     logger.warn(`${JSON.stringify(this.equipmentData[index])}`);
                 } else {
+                    // 分身装备属性转换
                     existingAttributeList = this.processAttributes(this.equipmentData[index][equipmentType].attributeList);
+                    originalEquipmentDesc = `${DBMgr.inst.getEquipmentQuality(this.equipmentData[index][equipmentType].quality)} ${DBMgr.inst.getEquipmentName(this.equipmentData[index][equipmentType].equipmentId)} ${DBMgr.inst.getAttribute(existingAttributeList.attack.type)}:${existingAttributeList.attack.value / 10} ${DBMgr.inst.getAttribute(existingAttributeList.defense.type)}:${existingAttributeList.defense.value / 10}`;
+                    if (quality >= rule.quality && showResult) {
+                        logger.info(`[装备] ${newEquipmentDesc} 等级${level} 与原装备对比 ${originalEquipmentDesc} 等级${this.equipmentData[index][equipmentType].level}`);
+                    }
                 }
 
-                if (
-                    !betterAttributes &&
-                    quality >= rule.quality &&
-                    (fightValue >= this.fightValueData[index] * (1 - rule.fightValueOffset) ||
-                        !rule.condition[index].includes(existingAttributeList.attack.type) ||
-                        parseFloat(attributeList.attack.value) >= parseFloat(existingAttributeList.attack.value) * (1 + rule.probOffset))
-                ) {
+                if ( !betterAttributes && quality >= rule.quality) {
+                    // 比较等级
+                    const tempOffset = rule.probOffset / 4;
+                    const levelOffset = rule.levelOffset || 5;
+                    let offsetMultiplier = 1 - tempOffset;
+
+                    // 如果装备等级比分身高{levelOffset}级以上，那么偏移值需要平方
+                    if (level - levelOffset > this.equipmentData[index][equipmentType].level) {
+                        offsetMultiplier = Math.pow(offsetMultiplier, 2); // 进行平方计算
+                    }
+                    if (level >= (this.equipmentData[index][equipmentType].level - 1) && parseFloat(attributeList.attack.value) >= parseFloat(existingAttributeList.attack.value) * offsetMultiplier) {
+                        if (showResult) logger.error(`[装备] ${newEquipmentDesc} 等级${level} 大于 分身${this.separationNames[index]} ${this.equipmentData[index][equipmentType].level} 且攻击属性 ${attributeList.attack.value} 大于 ${existingAttributeList.attack.value} * ${offsetMultiplier} = ${existingAttributeList.attack.value * offsetMultiplier}`);
+                        betterAttributes = true;
+                    }
+                    if (!rule.condition[index].includes(existingAttributeList.attack.type)) {
+                        if (showResult) logger.error(`[装备] 分身${this.separationNames[index]} 已装备的攻击属性 ${DBMgr.inst.getAttribute(existingAttributeList.attack.type)} 不是期望的攻击属性`);
+                        betterAttributes = true;
+                    }
+                }
+
+                // 无视品质 属性高于概率偏移值
+                if (existingExist && parseFloat(attributeList.attack.value) >= parseFloat(existingAttributeList.attack.value) * (1 + rule.probOffset)) {
+                    if (showResult) logger.error(`[装备] ${newEquipmentDesc} 攻击属性 ${attributeList.attack.value} 大于 分身${this.separationNames[index]} ${existingAttributeList.attack.value} * ${1 + rule.probOffset} = ${existingAttributeList.attack.value * (1 + rule.probOffset)}`);
                     betterAttributes = true;
                 }
 
                 if (betterAttributes) {
                     if (existingExist) {
-                        logger.info(
-                            `[装备] 分身${index} 原装备 ${DBMgr.inst.getEquipmentQuality(
-                                this.equipmentData[index][equipmentType].quality
-                            )} ${DBMgr.inst.getEquipmentName(this.equipmentData[index][equipmentType].equipmentId)} ${DBMgr.inst.getAttribute(
-                                existingAttributeList.attack.type
-                            )}:${existingAttributeList.attack.value / 10} ${DBMgr.inst.getAttribute(existingAttributeList.defense.type)}:${existingAttributeList.defense.value / 10
-                            }`
-                        );
+                        logger.info(`[装备] 分身${this.separationNames[index]} 原装备 ${originalEquipmentDesc}`);
                     }
-                    logger.warn(
-                        `[装备] 分身${index} 新装备 ${DBMgr.inst.getEquipmentQuality(quality)} ${DBMgr.inst.getEquipmentName(
-                            equipmentId
-                        )} ${DBMgr.inst.getAttribute(attributeList.attack.type)}:${attributeList.attack.value / 10} ${DBMgr.inst.getAttribute(
-                            attributeList.defense.type
-                        )}:${attributeList.defense.value / 10}`
-                    );
-                    Attribute.SwitchSeparation(index);
+                    logger.warn(`[装备] 分身${this.separationNames[index]} 新装备 ${newEquipmentDesc}`);
+
+                    if (this.useSeparationIdx !== index) {
+                        logger.info(`[装备] 分身切换至 ${this.separationNames[index]}`);
+                        Attribute.SwitchSeparation(index);
+                    }
                     Attribute.DealEquipmentEnum_EquipAndResolveOld(id);
                     Attribute.FetchSeparation();
                     return true;
@@ -212,15 +231,19 @@ export default class PlayerAttributeMgr {
     }
 
     doChopTree() {
-        const item = BagMgr.inst.findItemById(100004);
-        if (item.num < account.chopTree.stop.num || this.level <= account.chopTree.stop.level) {
+        // if (this.haveUnDealEquipment()) {
+        //     logger.debug(`[砍树] 有未处理装备`);
+        //     return;
+        // }
+        const peachNum = BagMgr.inst.getGoodsNum(100004);
+        if (peachNum < account.chopTree.stop.num || this.level <= account.chopTree.stop.level) {
             logger.warn(`[砍树] 停止任务`);
             this.chopEnabled = false;
             return;
         } else {
-            if (item.num !== this.previousPeachNum) {
-                logger.info(`[砍树] 还剩 ${item.num} 桃子`);
-                this.previousPeachNum = item.num; // 更新上一次数量
+            if (peachNum !== this.previousPeachNum) {
+                logger.info(`[砍树] 还剩 ${peachNum} 桃子`);
+                this.previousPeachNum = peachNum; // 更新上一次数量
             }
             Attribute.Chop(this.chopTimes);
             Attribute.CheckUnfinishedEquipment();
@@ -282,9 +305,12 @@ export default class PlayerAttributeMgr {
 
     // 207 仙树初始化以及自动升级
     SyncTree(t) {
-        this.getAdRewardTimes = t.freeSpeedUpTimes || 0;
-        this.dreamLvUpEndTime = parseInt(t.dreamLvUpEndTime, 10) || 0;
-        this.lastAdRewardTime = parseInt(t.freeSpeedUpCdEndTime, 10) || 0;
+        if (!this.treeInitialized) {
+            this.getAdRewardTimes = t.freeSpeedUpTimes || 0;
+            this.dreamLvUpEndTime = parseInt(t.dreamLvUpEndTime, 10) || 0;
+            this.lastAdRewardTime = parseInt(t.freeSpeedUpCdEndTime, 10) || 0;
+            this.treeInitialized = true;
+        }
         this.treeLevel = t.dreamLv;
         this.calculateMultiplier(this.treeLevel);
     }

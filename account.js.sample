@@ -2,6 +2,8 @@ const account = {
     serverId: "<serverId>",
     username: "<username>",
     password: "<password>",
+    token: "<app_pst>",
+    uid: "<uid>",
     rules: [
         { ItemId: 100004, minItemLv: 3, isCheck: true, description: "仙桃" },
         { ItemId: 100025, minItemLv: 5, isCheck: false, description: "净瓶水" },
@@ -27,7 +29,7 @@ const account = {
         showResult: false, // 显示砍树结果 防焦虑
         separation: {
             quality: 11,          // 最低品质
-            fightValueOffset: 0,  // 妖力偏移值 能接受妖力低于该百分比 新装备妖力 >= 当前装备妖力 * ( 1 - fightValueOffset )
+            levelOffset: 5,       // 如果新装备等级高于现装备5级以上, 那么概率就会放低要求
             probOffset: 0.2,      // 概率偏移值 概率大于该百分比直接穿上 比如当前是 16% 的概率 设置为0.1 那么大于16% x ( 1 + 0.2 ) = 19.2%
             condition:[
                 [5],              // 元体 击晕

@@ -9,8 +9,6 @@ async function sleep(ms) {
 (async () => {
     let childProcess;
     const reconnectInterval = account.reconnectInterval || 60 * 1000 * 5;
-    const scheduleTimeout = 10 * 1000; // 10s
-    let isScheduledRestart = false; // 标志位
 
     async function runCmd() {
         childProcess = spawn("node", ["./src/index.js"], {
@@ -23,10 +21,8 @@ async function sleep(ms) {
         });
 
         childProcess.on("exit", async () => {
-            if (!isScheduledRestart) {
-                logger.warn(`[守护] 子进程退出，将在 ${new Date(Date.now() + reconnectInterval).toLocaleString()} 重启`);
-                restartProcess();
-            }
+            logger.warn(`[守护] 子进程退出，将在 ${new Date(Date.now() + reconnectInterval).toLocaleString()} 重启`);
+            restartProcess();
         });
 
         childProcess.on("error", (err) => {
@@ -38,33 +34,9 @@ async function sleep(ms) {
         if (childProcess) {
             childProcess.kill("SIGKILL");
         }
-        if (!isScheduledRestart) {
-            await sleep(reconnectInterval);
-        } else {
-            await sleep(scheduleTimeout * 2);
-        }
+        await sleep(reconnectInterval);
         await runCmd();
     }
 
-    function calculateTimeoutToMidnight() {
-        const now = new Date();
-        const nextMidnight = new Date(now);
-        nextMidnight.setHours(0, 0, 0, 0);
-        nextMidnight.setDate(nextMidnight.getDate() + 1); // 设置为每天的 00:00
-        return nextMidnight - now;
-    }
-
-    function scheduleMidnightRestart() {
-        const timeout = calculateTimeoutToMidnight();
-        logger.info(`[守护] 将在 ${new Date(Date.now() + timeout).toLocaleString()} 重启`);
-        setTimeout(async () => {
-            isScheduledRestart = true;  // 设置标志位，表示这是计划中的重启
-            await restartProcess();
-            isScheduledRestart = false; // 重置标志位
-            scheduleMidnightRestart();
-        }, timeout - scheduleTimeout);
-    }
-
     await runCmd();
-    scheduleMidnightRestart();
 })();
