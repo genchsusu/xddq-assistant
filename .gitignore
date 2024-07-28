@@ -132,6 +132,7 @@ dist
 
 nodejs
 account.js
+account_*.js
 
 test*
 .vscode

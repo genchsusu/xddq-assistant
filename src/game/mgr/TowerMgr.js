@@ -65,16 +65,15 @@ export default class TowerMgr {
         this.isProcessing = true;
 
         try {
-            if (this.hasReward) {
-                if (this.challenge == 0) {
-                    this.clear();
-                    logger.info("[镇妖塔管理] 任务完成停止循环");
-                } else {
-                    GameNetMgr.inst.sendPbMsg(Protocol.S_TOWER_CHALLENGE, {index: 0, isOneKey: true}, null);
-                    this.challenge--;
-                    await new Promise((resolve) => setTimeout(resolve, 1000 * 10));
-                }
+            if (this.challenge == 0) {
+                this.clear();
+                logger.info("[镇妖塔管理] 任务完成停止循环");
             } else {
+                GameNetMgr.inst.sendPbMsg(Protocol.S_TOWER_CHALLENGE, {index: 0, isOneKey: true}, null);
+                this.challenge--;
+            }
+
+            if (!this.hasReward) {
                 this.processReward();
             }
         } catch (error) {
