@@ -10,7 +10,7 @@ export default class TowerMgr {
         this.isProcessing = false;
         this.data = {};
         this.hasReward = false;
-        this.challenge = account.switch.challenge || 0;
+        this.challenge = account.switch.challenge;
         this.showResult = account.switch.showResult || false;
         LoopMgr.inst.add(this);
     }
