@@ -50,7 +50,7 @@ export default class PlayerAttributeMgr {
         };
         this.equipmentData = { 0: [], 1: [], 2: [] };
         this.treeLevel = 1;                                         // 树等级
-        this.treeInitialize = false;                                // 树是否初始化
+        this.treeInitialized = false;                               // 树是否初始化
         this.chopTimes = 1;                                         // 根据树等级计算砍树次数
         this.useSeparationIdx = null;                               // 使用的分身
 
@@ -333,9 +333,16 @@ export default class PlayerAttributeMgr {
 
     processReward() {
         const now = Date.now();
-        if (this.getAdRewardTimes < this.AD_REWARD_DAILY_MAX_NUM && now - this.lastAdRewardTime >= this.AD_REWARD_CD && this.dreamLvUpEndTime !== 0) {
+        let canExecuteReward = false;
+    
+        if (this.getAdRewardTimes == 0 && this.dreamLvUpEndTime !== 0) {
+            canExecuteReward = true;
+        } else if (this.getAdRewardTimes < this.AD_REWARD_DAILY_MAX_NUM && now - this.lastAdRewardTime >= this.AD_REWARD_CD && this.dreamLvUpEndTime !== 0) {
+            canExecuteReward = true;
+        }
+    
+        if (canExecuteReward) {
             logger.info(`[仙树管理] 还剩 ${this.AD_REWARD_DAILY_MAX_NUM - this.getAdRewardTimes} 次广告激励`);
-
             GameNetMgr.inst.sendPbMsg(Protocol.S_ATTRIBUTE_DREAM_LV_UP_SPEED_UP, { speedUpType: 1, useTimes: 1, isUseADTime: false }, null);
             this.getAdRewardTimes++;
             this.lastAdRewardTime = now;
