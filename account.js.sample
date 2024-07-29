@@ -17,8 +17,7 @@ const accounts = [
         ],
         switch: {
             homeland: true,     # 福地自动总开关
-            chopTree: true,     # 自动砍树 和 自动灵脉 不要同时开启
-            talent: false,      # 自动灵脉 和 自动砍树 不要同时开启
+            chopTree: true,     # 自动砍树
             herorank: false,    # 光速群英榜
             challenge: 50,      # [挑战] 冒险/真火/镇妖塔 次数 0为不挑战
             showResult: false,  # [挑战] 冒险/真火/镇妖塔 显示战斗结果
@@ -61,8 +60,7 @@ const accounts = [
         ],
         switch: {
             homeland: true,     # 福地自动总开关
-            chopTree: true,     # 自动砍树 和 自动灵脉 不要同时开启
-            talent: false,      # 自动灵脉 和 自动砍树 不要同时开启
+            chopTree: true,     # 自动砍树
             herorank: false,    # 光速群英榜
             challenge: 50,      # [挑战] 冒险/真火/镇妖塔 次数 0为不挑战
             showResult: false,  # [挑战] 冒险/真火/镇妖塔 显示战斗结果

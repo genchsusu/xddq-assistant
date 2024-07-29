@@ -7,6 +7,8 @@ async function sleep(ms) {
 }
 
 (async () => {
+    logger.info(`父进程的 PID: ${process.pid}`);
+
     let childProcesses = [];
     const defaultReconnectInterval = 60 * 1000 * 5; // 默认重连间隔为 5 分钟
 
@@ -14,16 +16,17 @@ async function sleep(ms) {
         const reconnectInterval = account.reconnectInterval || defaultReconnectInterval;
         const identifier = `${account.serverId}_${account.username}`;
 
-        const childProcess = spawn("node", ["./src/index.js", JSON.stringify(account)], {
+        const childProcess = spawn("node", ["./src/index.js"], {
             cwd: process.cwd(),
             shell: true,
-            // stdio: "inherit", // 子进程的输出重定向到父进程
             stdio: "ignore", // 静音子进程的输出
             env: {
                 ...process.env,
                 ACCOUNT: JSON.stringify(account), // 传递账户信息
             },
         });
+
+        logger.info(`[守护] 启动 ${account.serverId}区的 ${account.username} PID: ${childProcess.pid}`);
 
         childProcess.on("exit", async () => {
             logger.warn(`[守护] 子进程退出，将在 ${new Date(Date.now() + reconnectInterval).toLocaleString()} 重启`);
@@ -43,6 +46,7 @@ async function sleep(ms) {
         const index = childProcesses.findIndex(cp => cp.identifier === identifier);
 
         if (index !== -1) {
+            logger.info(`[守护] 杀死 ${account.serverId}区的 ${account.username} PID: ${childProcesses[index].childProcess.pid}`);
             childProcesses[index].childProcess.kill("SIGKILL");
             childProcesses.splice(index, 1);
         }
@@ -51,7 +55,6 @@ async function sleep(ms) {
     }
 
     for (let account of accounts) {
-        logger.info(`[守护] 启动 ${account.serverId}区的 ${account.username}`);
         await runCmd(account);
         await sleep(300); // 防止同时启动大量进程
     }
