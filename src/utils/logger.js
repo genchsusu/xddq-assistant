@@ -6,11 +6,12 @@ import createPath from '#utils/path.js';
 const resolvePath = createPath(import.meta.url);
 
 const logDir = resolvePath('../../logs');
-const loglevel = 'info';
 
 if (!fs.existsSync(logDir)) {
     fs.mkdirSync(logDir);
 }
+
+const loglevel = 'info';
 
 const customLevels = {
     error: 0,
@@ -72,8 +73,25 @@ class Logger {
 
         return this.loggers[logName];
     }
+
+    getLoggerByAccount() {
+        const logName = global.account ? `${global.account.serverId}_${global.account.username}` : 'default';
+        return this.init(logName);
+    }
 }
 
-const logger = new Logger().init("default");
-// export { logger, Logger };
+const loggerInstance = new Logger();
+
+function log(level, message) {
+    const logger = loggerInstance.getLoggerByAccount();
+    logger.log({ level, message });
+}
+
+const logger = {
+    error: (message) => log('error', message),
+    warn: (message) => log('warn', message),
+    info: (message) => log('info', message),
+    debug: (message) => log('debug', message),
+};
+
 export default logger;

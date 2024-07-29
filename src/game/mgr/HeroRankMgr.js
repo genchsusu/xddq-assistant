@@ -2,12 +2,11 @@ import GameNetMgr from "#game/net/GameNetMgr.js";
 import Protocol from "#game/net/Protocol.js";
 import logger from "#utils/logger.js";
 import LoopMgr from "#game/common/LoopMgr.js";
-import account from "../../../account.js";
 
 export default class HeroRankMgr {
     constructor() {
         this.isProcessing = false;
-        this.enabled = account.switch.herorank || false;
+        this.enabled = global.account.switch.herorank || false;
         this.buyNumDaily = 0;
         this.buyNumMax = 10;
         LoopMgr.inst.add(this);

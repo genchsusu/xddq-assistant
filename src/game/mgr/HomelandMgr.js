@@ -2,7 +2,6 @@ import GameNetMgr from "#game/net/GameNetMgr.js";
 import Protocol from "#game/net/Protocol.js";
 import logger from "#utils/logger.js";
 import LoopMgr from "#game/common/LoopMgr.js";
-import account from "../../../account.js";
 import UserMgr from "#game/mgr/UserMgr.js";
 
 class Homeland {
@@ -154,8 +153,8 @@ export default class HomelandMgr {
         this.worker.free = t.freeWorkerNum || 0;
         this.worker.total = t.totalWorkerNum || 0;
         this.worker.energy = t.energy || 0;
-        // 如果account.js中没有定义rules, 则使用默认规则, 默认只偷取3级以上的仙桃
-        this.rules = account.rules || HomelandMgr.DEAFULT_RULES;
+        // 如果配置中没有定义rules, 则使用默认规则, 默认只偷取3级以上的仙桃
+        this.rules = global.account.rules || HomelandMgr.DEAFULT_RULES;
 
         if (t.freeWorkerNum > 0 && t.energy > 0) {
             logger.info(`[福地管理] 有${t.freeWorkerNum}只空闲老鼠, 还剩${t.energy}体力`);
@@ -483,7 +482,7 @@ export default class HomelandMgr {
         this.isProcessing = true;
 
         try {
-            if (account.switch.homeland === false) {
+            if (global.account.switch.homeland === false) {
                 logger.info("[福地管理] 未开启福地偷桃");
                 this.clear();
                 this.isProcessing = false;

@@ -4,12 +4,11 @@ import logger from "#utils/logger.js";
 import LoopMgr from "#game/common/LoopMgr.js";
 import DBMgr from "#game/common/DBMgr.js";
 import BagMgr from "#game/mgr/BagMgr.js";
-import account from "../../../account.js";
 
 class Attribute {
     static Chop(times = 1) {
         logger.debug(`[砍树] 砍树 ${times} 次`);
-        return GameNetMgr.inst.sendPbMsg(Protocol.S_ATTRIBUTE_DREAM_MSG, { auto: true, attr: [account.chopTree.separation.condition.flat()], times: times }, null);
+        return GameNetMgr.inst.sendPbMsg(Protocol.S_ATTRIBUTE_DREAM_MSG, { auto: true, attr: [global.account.chopTree.separation.condition.flat()], times: times }, null);
     }
 
     static CheckUnfinishedEquipment() {
@@ -55,7 +54,7 @@ export default class PlayerAttributeMgr {
         this.useSeparationIdx = null;                               // 使用的分身
 
         this.unDealEquipmentDataMsg = [];                           // 未处理装备数据
-        this.chopEnabled = account.switch.chopTree || false;        // 用于存储 chopTree 的定时任务
+        this.chopEnabled = global.account.switch.chopTree || false;        // 用于存储 chopTree 的定时任务
         this.previousPeachNum = 0;                                  // 用于存储上一次的桃子数量
 
         // 🔒储存状态防止同时砍树和灵脉时候出现问题
@@ -156,8 +155,8 @@ export default class PlayerAttributeMgr {
 
     async processEquipment(quality, level, attributeList, equipmentType, id, equipmentId) {
         if (this.separation) {
-            const showResult = account.chopTree.showResult || false;
-            const rule = account.chopTree.separation;
+            const showResult = global.account.chopTree.showResult || false;
+            const rule = global.account.chopTree.separation;
             const attackType = attributeList.attack.type;
             const defenseType = attributeList.defense.type;
             let originalEquipmentDesc;
@@ -236,7 +235,7 @@ export default class PlayerAttributeMgr {
         //     return;
         // }
         const peachNum = BagMgr.inst.getGoodsNum(100004);
-        if (peachNum < account.chopTree.stop.num || this.level <= account.chopTree.stop.level) {
+        if (peachNum < global.account.chopTree.stop.num || this.level <= global.account.chopTree.stop.level) {
             logger.warn(`[砍树] 停止任务`);
             this.chopEnabled = false;
             return;

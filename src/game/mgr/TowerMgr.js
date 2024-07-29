@@ -3,15 +3,14 @@ import Protocol from "#game/net/Protocol.js";
 import logger from "#utils/logger.js";
 import LoopMgr from "#game/common/LoopMgr.js";
 import PalaceMgr from "#game/mgr/PalaceMgr.js";
-import account from "../../../account.js";
 
 export default class TowerMgr {
     constructor() {
         this.isProcessing = false;
         this.data = {};
         this.hasReward = false;
-        this.challenge = account.switch.challenge;
-        this.showResult = account.switch.showResult || false;
+        this.challenge = global.account.switch.challenge;
+        this.showResult = global.account.switch.showResult || false;
         LoopMgr.inst.add(this);
     }
 
