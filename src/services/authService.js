@@ -3,6 +3,57 @@ import CryptoJS from "crypto-js";
 import qs from "qs";
 import { v4 as uuidv4 } from "uuid";
 import logger from "#utils/logger.js";
+import fs from 'fs';
+import util from 'util';
+import createPath from '#utils/path.js';
+
+const resolvePath = createPath(import.meta.url);
+
+function matches(account, criteria) {
+    return Object.keys(criteria).every(key => account[key] === criteria[key]);
+}
+
+async function updateAccount(filePath, targetAccount, newObject) {
+    const readFileAsync = util.promisify(fs.readFile);
+    const writeFileAsync = util.promisify(fs.writeFile);
+    try {
+        const data = await readFileAsync(filePath, 'utf8');
+        let accounts;
+
+        try {
+            accounts = JSON.parse(data);
+        } catch (parseErr) {
+            logger.error('account.json JSON解析错误:', parseErr);
+            return;
+        }
+
+        let accountFound = false;
+        for (let account of accounts) {
+            if (matches(account, targetAccount)) {
+                Object.assign(account, newObject);
+                accountFound = true;
+                break;
+            }
+        }
+
+        if (!accountFound) {
+            logger.error('account.json 未找到匹配的账户');
+            return;
+        }
+
+        const newContent = JSON.stringify(accounts, null, 4);
+
+        // 写回文件
+        try {
+            await writeFileAsync(filePath, newContent, 'utf8');
+            logger.info('account.json 文件已成功修改并保存');
+        } catch (writeErr) {
+            logger.error('account.json 写入文件时出错:', writeErr);
+        }
+    } catch (err) {
+        logger.error('account.json 读取文件时出错:', err);
+    }
+}
 
 export default class AuthService {
     getRandomNum(count) {
@@ -174,7 +225,7 @@ export default class AuthService {
             if (secondResponse.code === 1) {
                 const app_pst = secondResponse.data.app_pst;
 
-                const thirdResponse = await this.LoginWithToken(serverId, app_pst, uid, username);
+                const thirdResponse = await this.LoginWithToken(serverId, app_pst, uid, username, password);
                 return thirdResponse;
             } else {
                 throw new Error("登陆失败");
@@ -184,7 +235,7 @@ export default class AuthService {
         }
     }
 
-    async LoginWithToken(serverId, app_pst, uid, username) {
+    async LoginWithToken(serverId, app_pst, uid, username, password) {
         try {
             const thirdResponse = await this.thirdRequest(serverId, app_pst, uid, username);
         
@@ -192,6 +243,19 @@ export default class AuthService {
                 throw new Error("登陆失败");
             }
             logger.info(`登录成功, ${JSON.stringify(thirdResponse, null, "\t")}`);
+            // 更新账户信息 保存token uid
+            const filePath = resolvePath('../../account.json');
+            const targetAccount = {
+                "serverId": serverId,
+                "username": username,
+                "password": password
+            };
+            const newObject = {
+                "token": app_pst,
+                "uid": uid,
+                "nickName": thirdResponse.nickName,
+            };
+            await updateAccount(filePath, targetAccount, newObject);
         
             return thirdResponse;
         } catch (error) {

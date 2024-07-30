@@ -134,5 +134,7 @@ nodejs
 account.js
 account_*.js
 
+account.json
+
 test*
 .vscode

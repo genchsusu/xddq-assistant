@@ -15,7 +15,7 @@ export default async (username, password, serverId, app_pst, uid) => {
         try {
             if (app_pst && uid) {
                 logger.info("[Login] 尝试使用token登录...");
-                response = await authServiceInstance.LoginWithToken(serverId, app_pst, uid, username);
+                response = await authServiceInstance.LoginWithToken(serverId, app_pst, uid, username, password);
             } else {
                 throw new Error("[Login] token登陆信息不完整, 尝试使用用户名密码登录...");
             }

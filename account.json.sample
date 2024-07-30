@@ -1,0 +1,64 @@
+[
+    {
+        "serverId": "<serverId>",
+        "username": "<username>",
+        "password": "<password>",
+        "token": "<app_pst>",
+        "uid": "<uid>",
+        "rules": [
+            { "ItemId": 100004, "minItemLv": 3, "isCheck": true, "description": "仙桃" },
+            { "ItemId": 100025, "minItemLv": 5, "isCheck": false, "description": "净瓶水" },
+            { "ItemId": 100000, "minItemLv": 5, "isCheck": false, "description": "仙玉" },
+            { "ItemId": 100003, "minItemLv": 5, "isCheck": false, "description": "灵石" },
+            { "ItemId": 100029, "minItemLv": 5, "isCheck": false, "description": "琉璃珠" },
+            { "ItemId": 100044, "minItemLv": 5, "isCheck": false, "description": "天衍令" },
+            { "ItemId": 100047, "minItemLv": 5, "isCheck": false, "description": "昆仑铁" }
+        ],
+        "_comment_rules": "福地规则 每个规则对应一个物品 minItemLv为最低品质 isCheck为是否开启检查",
+        "switch": {
+            "homeland": true,
+            "_comment_homeland": "福地自动总开关",
+            "chopTree": false,
+            "_comment_chopTree": "自动砍树",
+            "herorank": false,
+            "_comment_herorank": "光速群英榜",
+            "challenge": 50,
+            "_comment_challenge": "[挑战] 冒险/真火/镇妖塔 次数 0为不挑战",
+            "showResult": false,
+            "_comment_showResult": "[挑战] 冒险/真火/镇妖塔 显示战斗结果"
+        },
+        "chopTree": {
+            "stop": {
+                "num": 19000,
+                "_comment_num": "桃子数量<该数 砍树停止",
+                "level": 455,
+                "_comment_level": "玩家等级等于该数 设置为渡劫等级 砍树停止"
+            },
+            "showResult": true,
+            "_comment_showResult": "显示砍树结果 防焦虑",
+            "separation": {
+                "quality": 11,
+                "_comment_quality": "最低品质",
+                "_comment_quality_dict": "1: 凡品 2: 下品 3: 中品 4: 上品 5: 极品 6: 仙品 7: 完美 8: 先天 9: 至宝 10: 灵宝1星 11: 灵宝2星 12: 灵宝3星 13: 灵宝4星 14: 灵宝5星 15: 真宝1星 16: 真宝2星 17: 真宝3星 18: 真宝4星 19: 真宝5星 20: 灵器1星 21: 灵器2星 22: 灵器3星 23: 灵器4星 24: 灵器5星 25: 神器1星 26: 神器2星 27: 神器3星 28: 神器4星 29: 神器5星 30: 仙器1星 31: 仙器2星 32: 仙器3星 33: 仙器4星 34: 仙器5星",
+                "levelOffset": 5,
+                "_comment_levelOffset": "如果新装备等级高于现装备5级以上, 那么概率就会放低要求",
+                "probOffset": 0.2,
+                "_comment_probOffset": "概率偏移值 概率大于该百分比直接穿上 比如当前是 16% 的概率 设置为0.2 那么大于16% x ( 1 + 0.2 ) = 19.2%",
+                "condition":[
+                    [9],
+                    [6, 7],
+                    [8]
+                ],
+                "_comment_condition": "元体 击晕 阳神 连爆 阴身 闪避",
+                "_comment_condition_dict": "5: 击晕 6: 暴击 7: 连击 8: 闪避 9: 反击 10: 吸血 11: 抗击晕 12: 抗暴击 13: 抗连击 14: 抗闪避 15: 抗反击 16: 抗吸血"
+            }
+        },
+
+        "reconnectInterval": 300000,
+        "_comment_reconnectInterval": "重连间隔 默认为60 * 1000 * 5 即5分钟"
+    },
+    {
+        ...账号二再复制一次
+    }
+]
+
