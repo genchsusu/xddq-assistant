@@ -161,14 +161,16 @@ export default class PlayerAttributeMgr {
             const defenseType = attributeList.defense.type;
             let originalEquipmentDesc;
             const newEquipmentDesc = `${DBMgr.inst.getEquipmentQuality(quality)} ${DBMgr.inst.getEquipmentName(equipmentId)} ${DBMgr.inst.getAttribute(attackType)}:${attributeList.attack.value / 10} ${DBMgr.inst.getAttribute(defenseType)}:${attributeList.defense.value / 10}`;
-
-            const { result, index } = this.checkMultipleConditions(attackType, [attackType, defenseType], rule.condition);
-
+    
+            // 判断使用的条件类型
+            const conditions = rule.strictMode ? rule.strictConditions : rule.condition;
+            const { result, index } = this.checkMultipleConditions(attackType, [attackType, defenseType], conditions, rule.strictMode);
+    
             if (result) {
                 let betterAttributes = false;
                 let existingAttributeList = null;
                 let existingExist = true;
-
+    
                 // 如果分身没装备就直接穿上
                 if (!this.equipmentData[index][equipmentType]) {
                     betterAttributes = true;
@@ -183,13 +185,13 @@ export default class PlayerAttributeMgr {
                         logger.info(`[装备] ${newEquipmentDesc} 等级${level} 与原装备对比 ${originalEquipmentDesc} 等级${this.equipmentData[index][equipmentType].level}`);
                     }
                 }
-
+    
                 if ( !betterAttributes && quality >= rule.quality) {
                     // 比较等级
                     const tempOffset = rule.probOffset / 4;
                     const levelOffset = rule.levelOffset || 5;
                     let offsetMultiplier = 1 - tempOffset;
-
+    
                     // 如果装备等级比分身高{levelOffset}级以上，那么偏移值需要平方
                     if (level - levelOffset > this.equipmentData[index][equipmentType].level) {
                         offsetMultiplier = Math.pow(offsetMultiplier, 2); // 进行平方计算
@@ -198,24 +200,34 @@ export default class PlayerAttributeMgr {
                         if (showResult) logger.error(`[装备] ${newEquipmentDesc} 等级${level} 大于 分身${this.separationNames[index]} ${this.equipmentData[index][equipmentType].level} 且攻击属性 ${attributeList.attack.value} 大于 ${existingAttributeList.attack.value} * ${offsetMultiplier} = ${existingAttributeList.attack.value * offsetMultiplier}`);
                         betterAttributes = true;
                     }
-                    if (!rule.condition[index].includes(existingAttributeList.attack.type)) {
-                        if (showResult) logger.error(`[装备] 分身${this.separationNames[index]} 已装备的攻击属性 ${DBMgr.inst.getAttribute(existingAttributeList.attack.type)} 不是期望的攻击属性`);
-                        betterAttributes = true;
+                    if (rule.strictMode) {
+                        // 严格模式下，检查主属性和副属性是否匹配
+                        const primaryMatch = conditions[index].primaryAttribute.includes(existingAttributeList.attack.type);
+                        const secondaryMatch = conditions[index].secondaryAttribute.includes(existingAttributeList.defense.type);
+                        if (!(primaryMatch && secondaryMatch)) {
+                            if (showResult) logger.error(`[装备] 分身${this.separationNames[index]} 已装备的主属性或副属性不符合期望`);
+                            betterAttributes = true;
+                        }
+                    } else {
+                        if (!rule.condition[index].includes(existingAttributeList.attack.type)) {
+                            if (showResult) logger.error(`[装备] 分身${this.separationNames[index]} 已装备的攻击属性 ${DBMgr.inst.getAttribute(existingAttributeList.attack.type)} 不是期望的攻击属性`);
+                            betterAttributes = true;
+                        }
                     }
                 }
-
+    
                 // 无视品质 属性高于概率偏移值
                 if (existingExist && parseFloat(attributeList.attack.value) >= parseFloat(existingAttributeList.attack.value) * (1 + rule.probOffset)) {
                     if (showResult) logger.error(`[装备] ${newEquipmentDesc} 攻击属性 ${attributeList.attack.value} 大于 分身${this.separationNames[index]} ${existingAttributeList.attack.value} * ${1 + rule.probOffset} = ${existingAttributeList.attack.value * (1 + rule.probOffset)}`);
                     betterAttributes = true;
                 }
-
+    
                 if (betterAttributes) {
                     if (existingExist) {
                         logger.info(`[装备] 分身${this.separationNames[index]} 原装备 ${originalEquipmentDesc}`);
                     }
                     logger.warn(`[装备] 分身${this.separationNames[index]} 新装备 ${newEquipmentDesc}`);
-
+    
                     if (this.useSeparationIdx !== index) {
                         logger.info(`[装备] 分身切换至 ${this.separationNames[index]}`);
                         Attribute.SwitchSeparation(index);
@@ -274,32 +286,51 @@ export default class PlayerAttributeMgr {
         return attributes;
     }
 
-    checkCondition(input, condition) {
+    checkCondition(input, condition, strictMode = false) {
         for (let i = 0; i < condition.length; i++) {
-            for (let j = 0; j < condition[i].length; j++) {
-                const element = condition[i][j];
-                if (Array.isArray(element) && Array.isArray(input) && input.length === element.length && input.every((val, index) => val === element[index])) {
+            if (strictMode) {
+                // 严格模式下的条件
+                const primary = condition[i].primaryAttribute || [];
+                const secondary = condition[i].secondaryAttribute || [];
+    
+                // 检查主属性和副属性是否在要求范围内
+                const primaryMatches = primary.includes(input.primary);
+                const secondaryMatches = input.secondary.some(attr => secondary.includes(attr));
+    
+                if (primaryMatches && secondaryMatches) {
                     return { result: true, index: i };
-                } else if (element === input) {
-                    return { result: true, index: i };
+                }
+            } else {
+                // 非严格模式下的条件判断
+                for (let j = 0; j < condition[i].length; j++) {
+                    const element = condition[i][j];
+                    if (Array.isArray(element) && Array.isArray(input) && input.length === element.length && input.every((val, index) => val === element[index])) {
+                        return { result: true, index: i };
+                    } else if (element === input) {
+                        return { result: true, index: i };
+                    }
                 }
             }
         }
         return { result: false, index: -1 };
     }
-
-    checkMultipleConditions(input1, input2, condition) {
-        let result1 = this.checkCondition(input1, condition);
-        if (result1.result) {
-            return result1;
+    
+    checkMultipleConditions(primaryType, attributeTypes, condition, strictMode = false) {
+        const input = strictMode ? {
+            primary: primaryType,
+            secondary: attributeTypes
+        } : primaryType;
+    
+        let result = this.checkCondition(input, condition, strictMode);
+        if (result.result) {
+            return result;
         }
-
-        let result2 = this.checkCondition(input2, condition);
-        if (result2.result) {
-            return result2;
+    
+        if (!strictMode) {
+            result = this.checkCondition(attributeTypes, condition);
         }
-
-        return { result: false, index: -1 };
+    
+        return result;
     }
 
     // 207 仙树初始化以及自动升级
