@@ -8,7 +8,13 @@ import BagMgr from "#game/mgr/BagMgr.js";
 class Attribute {
     static Chop(times = 1) {
         logger.debug(`[砍树] 砍树 ${times} 次`);
-        return GameNetMgr.inst.sendPbMsg(Protocol.S_ATTRIBUTE_DREAM_MSG, { auto: true, attr: [global.account.chopTree.separation.condition.flat()], times: times }, null);
+    
+        const separation = global.account.chopTree.separation;
+        let attr = separation.strictMode
+            ? [...new Set(separation.strictConditions.flatMap(condition => [...condition.primaryAttribute, ...condition.secondaryAttribute]))]
+            : separation.condition.flat();
+    
+        return GameNetMgr.inst.sendPbMsg(Protocol.S_ATTRIBUTE_DREAM_MSG, { auto: true, attr: attr, times: times }, null);
     }
 
     static CheckUnfinishedEquipment() {
@@ -196,10 +202,12 @@ export default class PlayerAttributeMgr {
                     if (level - levelOffset > this.equipmentData[index][equipmentType].level) {
                         offsetMultiplier = Math.pow(offsetMultiplier, 2); // 进行平方计算
                     }
+
                     if (level >= (this.equipmentData[index][equipmentType].level - 1) && parseFloat(attributeList.attack.value) >= parseFloat(existingAttributeList.attack.value) * offsetMultiplier) {
                         if (showResult) logger.error(`[装备] ${newEquipmentDesc} 等级${level} 大于 分身${this.separationNames[index]} ${this.equipmentData[index][equipmentType].level} 且攻击属性 ${attributeList.attack.value} 大于 ${existingAttributeList.attack.value} * ${offsetMultiplier} = ${existingAttributeList.attack.value * offsetMultiplier}`);
                         betterAttributes = true;
                     }
+                    
                     if (rule.strictMode) {
                         // 严格模式下，检查主属性和副属性是否匹配
                         const primaryMatch = conditions[index].primaryAttribute.includes(existingAttributeList.attack.type);

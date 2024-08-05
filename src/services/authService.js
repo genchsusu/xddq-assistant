@@ -244,7 +244,7 @@ export default class AuthService {
             }
             logger.info(`登录成功, ${JSON.stringify(thirdResponse, null, "\t")}`);
             // 更新账户信息 保存token uid
-            const filePath = resolvePath('../../account.json');
+            const filePath = resolvePath(`../../${global.configFile}`);
             const targetAccount = {
                 "serverId": serverId,
                 "username": username,

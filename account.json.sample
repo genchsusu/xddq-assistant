@@ -49,25 +49,25 @@
                     [6, 7],
                     [8]
                 ],
-                "_comment_condition": "元体 击晕 阳神 连爆 阴身 闪避",
+                "_comment_condition": "元体 反击 阳神 连爆 阴身 闪避",
                 "_comment_condition_dict": "5: 击晕 6: 暴击 7: 连击 8: 闪避 9: 反击 10: 吸血 11: 抗击晕 12: 抗暴击 13: 抗连击 14: 抗闪避 15: 抗反击 16: 抗吸血",
                 "strictMode": false,
                 "_comment_strictMode": "启用装备严格模式",
                 "strictConditions": [
                     {
-                        "primaryAttribute": [8],
-                        "secondaryAttribute": [12]
-                    },
-                    {
-                        "primaryAttribute": [6, 7, 9],
-                        "secondaryAttribute": [14]
-                    },
-                    {
                         "primaryAttribute": [9],
+                        "secondaryAttribute": [11]
+                    },
+                    {
+                        "primaryAttribute": [6, 7],
+                        "secondaryAttribute": [14]
+                    }
+                    {
+                        "primaryAttribute": [8],
                         "secondaryAttribute": [12]
                     }
                 ],
-                "_comment_strictConditions": "元体:闪避&抗暴、阳神:连爆反&抗闪、阴身:反击&抗晕"
+                "_comment_strictConditions": "元体: 反击&抗晕 阳神: 连爆&抗闪 阴身: 闪避&抗暴"
             }
         },
 

@@ -3,13 +3,14 @@ import Protocol from '#game/net/Protocol.js';
 import logger from "#utils/logger.js";
 import LoopMgr from '#game/common/LoopMgr.js';
 import PlayerAttributeMgr from "./PlayerAttributeMgr.js";
-import UnionMgr from "./UnionMgr.js";
 
 export default class BagMgr {
     constructor() {
         this.bagData = [];
         this.mallBuyCountList = [];
         this.isProcessing = false;
+        this.initialized = false;
+
         LoopMgr.inst.add(this);
     }
 
@@ -36,6 +37,10 @@ export default class BagMgr {
                 }
             });
             logger.debug("[背包管理] 更新背包数据");
+        }
+        if (!this.initialized) {
+            logger.info(`[背包管理] 当前有仙桃: ${this.getGoodsNum(100004)} 仙玉: ${this.getGoodsNum(100000)}` );
+            this.initialized = true;
         }
     }
 
