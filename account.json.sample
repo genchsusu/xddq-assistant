@@ -25,7 +25,11 @@
             "challenge": 50,
             "_comment_challenge": "[挑战] 冒险/真火/镇妖塔 次数 0为不挑战",
             "showResult": false,
-            "_comment_showResult": "[挑战] 冒险/真火/镇妖塔 显示战斗结果"
+            "_comment_showResult": "[挑战] 冒险/真火/镇妖塔 显示战斗结果",
+            "invade": true,
+            "_comment_invade": "[异兽入侵]开关",
+            "invade_index": 2,
+            "_comment_invade_index": "[异兽入侵]选择分身0,1,2"
         },
         "chopTree": {
             "stop": {
