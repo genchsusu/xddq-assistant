@@ -129,6 +129,12 @@ class MsgRecvMgr {
         UnionMgr.inst.BossReward();
     }
 
+    //6730 妖盟夺位战数据同步
+    static UnionFightApplyDataSync(t) {
+        logger.debug("[MsgRecvMgr] 妖盟请战");
+        UnionMgr.inst.UnionFightApplyDataSync(t);
+    }
+
     // 4802 仙宫点赞同步
     static PalaceWorshipRsp(t) {
         logger.debug("[MsgRecvMgr] 仙宫点赞同步");

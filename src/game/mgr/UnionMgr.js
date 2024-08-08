@@ -123,6 +123,18 @@ export default class UnionMgr {
         }
     }
 
+    //请战
+    UnionFightApplyDataSync(t) {
+        if (true == t.isApply && false == t.isRequest && true == t.isOpen) {
+            try {
+                logger.info("[妖盟管理] 妖盟请战");
+                GameNetMgr.inst.sendPbMsg(Protocol.S_UNION_FIGHT_REQUEST, {unionId:this.unionId}, null);
+            } catch{
+                logger.info("[妖盟管理] 妖盟请战失败");
+            }
+        }
+    }
+
     checkDailyTask(t) {
         const actions = [
             { threshold: 150, index: 0 },
