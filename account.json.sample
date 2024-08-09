@@ -29,7 +29,9 @@
             "invade": true,
             "_comment_invade": "[异兽入侵]开关",
             "invade_index": 2,
-            "_comment_invade_index": "[异兽入侵]选择分身0,1,2"
+            "_comment_invade_index": "[异兽入侵]选择分身0,1,2",
+            "starTrial": true,
+            "_comment_starTrial": "[星宿试炼]开关"
         },
         "chopTree": {
             "stop": {
