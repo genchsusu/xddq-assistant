@@ -21,6 +21,7 @@ import HeroRankMgr from "#game/mgr/HeroRankMgr.js";
 import ActivityMgr from "#game/mgr/ActivityMgr.js";
 import UnionMgr from "#game/mgr/UnionMgr.js";
 import HomelandMgr from "#game/mgr/HomelandMgr.js";
+import InvadeMgr from "#game/mgr/InvadeMgr.js";
 
 class MsgRecvMgr {
     constructor() {
@@ -126,6 +127,12 @@ class MsgRecvMgr {
     static UnionBossRewardRespMsg(t) {
         logger.debug("[MsgRecvMgr] 妖盟讨伐boss战斗结果");
         UnionMgr.inst.BossReward();
+    }
+
+    //6730 妖盟夺位战数据同步
+    static UnionFightApplyDataSync(t) {
+        logger.debug("[MsgRecvMgr] 妖盟请战");
+        UnionMgr.inst.UnionFightApplyDataSync(t);
     }
 
     // 4802 仙宫点赞同步
@@ -316,6 +323,15 @@ class MsgRecvMgr {
         HomelandMgr.inst.doExplore(t);
     }
 
+     // 1402 异兽入侵数据同步
+    static InvadeDataMsg(t) {
+        logger.debug("[MsgRecvMgr] 异兽入侵挑战");
+        InvadeMgr.inst.InvadeDataMsg(t);
+    }
+    static InvadeChallengeResp(t) {
+        logger.debug("[MsgRecvMgr] 异兽入侵用户数据同步");
+        InvadeMgr.inst.InvadeChallengeResp(t);
+    }
 // TODO: 以下代码未完成
 // import SystemUnlockMgr from "#game/mgr/SystemUnlockMgr.js";
 //     // 102 系统解锁同步
@@ -332,13 +348,6 @@ class MsgRecvMgr {
 //     }
 
 // TODO 以下暂时不想写
-// import InvadeMgr from "#game/mgr/InvadeMgr.js";
-//     // 1402 异兽入侵数据同步
-//     static InvadeDataMsg(t) {
-//         logger.debug("[MsgRecvMgr] 异兽入侵用户数据同步");
-//         InvadeMgr.inst.InvadeDataMsg(t);
-//         // 5次
-//     }
 
 
 // import CommonRedPacketMgr from "#game/mgr/CommonRedPacketMgr.js";
