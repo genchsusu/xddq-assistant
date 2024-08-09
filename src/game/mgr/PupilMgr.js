@@ -2,6 +2,7 @@ import GameNetMgr from "#game/net/GameNetMgr.js";
 import Protocol from "#game/net/Protocol.js";
 import logger from "#utils/logger.js";
 import LoopMgr from "#game/common/LoopMgr.js";
+import AdRewardMgr from "#game/mgr/AdRewardMgr.js";
 
 export default class PupilMgr {
     constructor() {
@@ -42,6 +43,9 @@ export default class PupilMgr {
 
     // 自动检查能量 毕业弟子 Loop在CustomMgr中
     async checkGraduatation(t) {
+        if (!global.account.switch.pupil) {
+            return;
+        }
         if (t.ret === 0) {
             // 判断是否可以招人
             const invitationCount = this.countElementsWithoutPupilData(t.siteList);
@@ -71,7 +75,9 @@ export default class PupilMgr {
         const now = Date.now();
         if (this.getAdRewardTimes < this.AD_REWARD_DAILY_MAX_NUM && now - this.lastAdRewardTime >= this.AD_REWARD_CD) {
             logger.info(`[宗门管理] 还剩 ${this.AD_REWARD_DAILY_MAX_NUM - this.getAdRewardTimes} 次广告激励`);
-            GameNetMgr.inst.sendPbMsg(Protocol.S_PUPIL_GET_AD_REWARD, { isUseADTime: false }, null);
+            const logContent = `[宗门] 还剩 ${this.AD_REWARD_DAILY_MAX_NUM - this.getAdRewardTimes} 次广告激励`;
+            AdRewardMgr.inst.AddAdRewardTask({protoId : Protocol.S_PUPIL_GET_AD_REWARD, data : { isUseADTime: false }, logStr : logContent});
+            // GameNetMgr.inst.sendPbMsg(Protocol.S_PUPIL_GET_AD_REWARD, { isUseADTime: false }, null);
             this.getAdRewardTimes++;
             this.lastAdRewardTime = now;
         }

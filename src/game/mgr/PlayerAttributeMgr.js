@@ -4,6 +4,7 @@ import logger from "#utils/logger.js";
 import LoopMgr from "#game/common/LoopMgr.js";
 import DBMgr from "#game/common/DBMgr.js";
 import BagMgr from "#game/mgr/BagMgr.js";
+import AdRewardMgr from "#game/mgr/AdRewardMgr.js";
 
 class Attribute {
     static Chop(times = 1) {
@@ -194,13 +195,21 @@ export default class PlayerAttributeMgr {
     
                 if ( !betterAttributes && quality >= rule.quality) {
                     // 比较等级
-                    const tempOffset = rule.probOffset / 4;
                     const levelOffset = rule.levelOffset || 5;
-                    let offsetMultiplier = 1 - tempOffset;
-    
+                    const lvLow = level - levelOffset > this.equipmentData[index][equipmentType].level;
+
+                    const probOffsetlow = rule.probOffsetLowLv || rule.probOffset;
+
+                    const tempOffset = (lvLow ? probOffsetlow : rule.probOffset) / 4;
+                    let offsetMultiplier = tempOffset;
+                    
                     // 如果装备等级比分身高{levelOffset}级以上，那么偏移值需要平方
-                    if (level - levelOffset > this.equipmentData[index][equipmentType].level) {
+                    if (lvLow) {
+                        offsetMultiplier = 1 - tempOffset;
                         offsetMultiplier = Math.pow(offsetMultiplier, 2); // 进行平方计算
+                    }
+                    else { 
+                        offsetMultiplier = 1 + tempOffset;
                     }
 
                     if (level >= (this.equipmentData[index][equipmentType].level - 1) && parseFloat(attributeList.attack.value) >= parseFloat(existingAttributeList.attack.value) * offsetMultiplier) {
@@ -381,7 +390,10 @@ export default class PlayerAttributeMgr {
     
         if (canExecuteReward) {
             logger.info(`[仙树管理] 还剩 ${this.AD_REWARD_DAILY_MAX_NUM - this.getAdRewardTimes} 次广告激励`);
-            GameNetMgr.inst.sendPbMsg(Protocol.S_ATTRIBUTE_DREAM_LV_UP_SPEED_UP, { speedUpType: 1, useTimes: 1, isUseADTime: false }, null);
+
+            const logContent = `[仙树] 还剩 ${this.AD_REWARD_DAILY_MAX_NUM - this.getAdRewardTimes} 次广告激励`;
+            AdRewardMgr.inst.AddAdRewardTask({protoId : Protocol.S_ATTRIBUTE_DREAM_LV_UP_SPEED_UP, data : { speedUpType: 1, useTimes: 1, isUseADTime: false }, logStr : logContent});
+            // GameNetMgr.inst.sendPbMsg(Protocol.S_ATTRIBUTE_DREAM_LV_UP_SPEED_UP, { speedUpType: 1, useTimes: 1, isUseADTime: false }, null);
             this.getAdRewardTimes++;
             this.lastAdRewardTime = now;
         }

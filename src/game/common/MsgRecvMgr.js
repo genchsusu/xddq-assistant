@@ -23,6 +23,7 @@ import UnionMgr from "#game/mgr/UnionMgr.js";
 import HomelandMgr from "#game/mgr/HomelandMgr.js";
 import InvadeMgr from "#game/mgr/InvadeMgr.js";
 import StarTrialMgr from "#game/mgr/StarTrialMgr.js";
+import AdRewardMgr from "#game/mgr/AdRewardMgr.js";
 
 class MsgRecvMgr {
     constructor() {
@@ -47,6 +48,7 @@ class MsgRecvMgr {
     static PrivilegeCardDataMsg(t) {
         logger.debug("[MsgRecvMgr] 同步特权卡数据");
         PlayerAttributeMgr.inst.SyncVip(t);
+        AdRewardMgr.inst.SyncVip(PlayerAttributeMgr.isMonthCardVip || PlayerAttributeMgr.isYearCardVip);
     }
 
     // 201 玩家属性信息同步
@@ -267,9 +269,7 @@ class MsgRecvMgr {
     // 1001 活动通用数据同步
     static PushActivityList(t) {
         logger.debug("[MsgRecvMgr] 活动通用数据同步");
-        for (const i of t.mainConfig) {
-            GameNetMgr.inst.sendPbMsg(Protocol.S_ACTIVITY_GET_DATA, { activityId: i.activityId }, null);
-        }
+        ActivityMgr.inst.SyncData(t);
     }
 
     // 1002 同步活动详细配置

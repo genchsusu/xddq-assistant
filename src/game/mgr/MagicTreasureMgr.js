@@ -2,6 +2,7 @@ import GameNetMgr from "#game/net/GameNetMgr.js";
 import Protocol from "#game/net/Protocol.js";
 import logger from "#utils/logger.js";
 import LoopMgr from "#game/common/LoopMgr.js";
+import AdRewardMgr from "#game/mgr/AdRewardMgr.js";
 
 export default class MagicTreasureMgr {
     constructor() {
@@ -55,7 +56,10 @@ export default class MagicTreasureMgr {
         for (const pool of this.jackpotData) {
             if (pool.adFreeTimes < this.AD_REWARD_DAILY_MAX_NUM && now - pool.lastAdTime >= this.AD_REWARD_CD) {
                 logger.info(`[法宝管理] [${pool.name}] 还剩 ${this.AD_REWARD_DAILY_MAX_NUM - pool.adFreeTimes} 次广告激励`);
-                GameNetMgr.inst.sendPbMsg(Protocol.S_MAGIC_TREASURE_DRAW_REQ, { drawTimes: 1, isAd: true, poolId: pool.poolId, isUseADTime: false}, null);
+                // GameNetMgr.inst.sendPbMsg(Protocol.S_MAGIC_TREASURE_DRAW_REQ, { drawTimes: 1, isAd: true, poolId: pool.poolId, isUseADTime: false }, null);
+                
+                const logContent = `[法宝] [${pool.name}] 还剩 ${this.AD_REWARD_DAILY_MAX_NUM - pool.adFreeTimes} 次广告激励`;
+                AdRewardMgr.inst.AddAdRewardTask({protoId : Protocol.S_MAGIC_TREASURE_DRAW_REQ, data : { drawTimes: 1, isAd: true, poolId: pool.poolId, isUseADTime: false }, logStr : logContent});
                 pool.adFreeTimes++;
                 pool.lastAdTime = now;
             }

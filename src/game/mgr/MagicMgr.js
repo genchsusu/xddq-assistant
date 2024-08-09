@@ -2,6 +2,7 @@ import GameNetMgr from "#game/net/GameNetMgr.js";
 import Protocol from "#game/net/Protocol.js";
 import logger from "#utils/logger.js";
 import LoopMgr from "#game/common/LoopMgr.js";
+import AdRewardMgr from "#game/mgr/AdRewardMgr.js";
 
 export default class MagicMgr {
     constructor() {
@@ -36,7 +37,9 @@ export default class MagicMgr {
         const now = Date.now();
         if (this.getAdRewardTimes < this.AD_REWARD_DAILY_MAX_NUM && now - this.lastAdRewardTime >= this.AD_REWARD_CD) {
             logger.info(`[神通管理] 还剩 ${this.AD_REWARD_DAILY_MAX_NUM - this.getAdRewardTimes} 次广告激励`);
-            GameNetMgr.inst.sendPbMsg(Protocol.S_MAGIC_DERIVATION, { times: 1, isAd: true, isUseADTime: false }, null);
+            // GameNetMgr.inst.sendPbMsg(Protocol.S_MAGIC_DERIVATION, { times: 1, isAd: true, isUseADTime: false }, null);
+            const logContent = `[神通] 还剩 ${this.AD_REWARD_DAILY_MAX_NUM - this.getAdRewardTimes} 次广告激励`;
+            AdRewardMgr.inst.AddAdRewardTask({protoId : Protocol.S_MAGIC_DERIVATION, data : { times: 1, isAd: true, isUseADTime: false }, logStr : logContent});
             this.getAdRewardTimes++;
             this.lastAdRewardTime = now;
         }

@@ -13,6 +13,17 @@ export default class ActivityMgr {
         return this._instance;
     }
 
+    async SyncData(t) { 
+        try {
+            for (const i of t.mainConfig) {
+                GameNetMgr.inst.sendPbMsg(Protocol.S_ACTIVITY_GET_DATA, { activityId: i.activityId }, null);
+                await new Promise((resolve) => setTimeout(resolve, 500));
+            }
+        } catch (error) {
+            logger.error(`[MsgRecvMgr] 活动通用数据同步 ${error}`);
+        }
+    }
+
     // 1002 1007 
     getReward(t) {
         const acts = t.activityDataList ?? t.activityConditionDataList ?? null;
