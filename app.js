@@ -78,7 +78,9 @@ async function sleep(ms) {
     }
 
     for (let account of accounts) {
-        await runCmd(account);
-        await sleep(300); // 防止同时启动大量进程
+        if (account.enabled) {
+            await runCmd(account);
+            await sleep(300); // 防止同时启动大量进程
+        }
     }
 })();

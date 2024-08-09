@@ -314,6 +314,10 @@ export default class HomelandMgr {
         if (isRefreshAllowed) {
             this.counter.failure = 0;
         }
+        
+        if (global.account.homeland.ignoreTimeCheck) {
+            this.counter.failure = 0;
+        }
 
         if ((nearPlayers.length == 0 || this.canRefresh) && timeSinceLastRefresh >= 5 * 60) {
             this.counter.failure++;

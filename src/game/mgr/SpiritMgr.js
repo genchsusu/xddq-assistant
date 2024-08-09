@@ -2,6 +2,7 @@ import GameNetMgr from "#game/net/GameNetMgr.js";
 import Protocol from "#game/net/Protocol.js";
 import logger from "#utils/logger.js";
 import LoopMgr from "#game/common/LoopMgr.js";
+import AdRewardMgr from "#game/mgr/AdRewardMgr.js";
 
 export default class SpiritMgr {
     constructor() {
@@ -34,7 +35,9 @@ export default class SpiritMgr {
         const now = Date.now();
         if (this.getAdRewardTimes < this.AD_REWARD_DAILY_MAX_NUM && now - this.lastAdRewardTime >= this.AD_REWARD_CD) {
             logger.info(`[精怪管理] 还剩 ${this.AD_REWARD_DAILY_MAX_NUM - this.getAdRewardTimes} 次广告激励`);
-            GameNetMgr.inst.sendPbMsg(Protocol.S_SPIRIT_DRAW, { drawTimes: 1, isAd: true, isUseADTime: false }, null);
+            const logContent = `[精怪] 还剩 ${this.AD_REWARD_DAILY_MAX_NUM - this.getAdRewardTimes} 次广告激励`;
+            AdRewardMgr.inst.AddAdRewardTask({protoId : Protocol.S_SPIRIT_DRAW, data : { drawTimes: 1, isAd: true, isUseADTime: false }, logStr : logContent});
+            // GameNetMgr.inst.sendPbMsg(Protocol.S_SPIRIT_DRAW, { drawTimes: 1, isAd: true, isUseADTime: false }, null);
             this.getAdRewardTimes++;
             this.lastAdRewardTime = now;
         }
