@@ -22,6 +22,7 @@ import ActivityMgr from "#game/mgr/ActivityMgr.js";
 import UnionMgr from "#game/mgr/UnionMgr.js";
 import HomelandMgr from "#game/mgr/HomelandMgr.js";
 import InvadeMgr from "#game/mgr/InvadeMgr.js";
+import StarTrialMgr from "#game/mgr/StarTrialMgr.js";
 
 class MsgRecvMgr {
     constructor() {
@@ -323,15 +324,23 @@ class MsgRecvMgr {
         HomelandMgr.inst.doExplore(t);
     }
 
-     // 1402 异兽入侵数据同步
+    // 1402 异兽入侵数据同步
     static InvadeDataMsg(t) {
         logger.debug("[MsgRecvMgr] 异兽入侵挑战");
         InvadeMgr.inst.InvadeDataMsg(t);
     }
+
     static InvadeChallengeResp(t) {
         logger.debug("[MsgRecvMgr] 异兽入侵用户数据同步");
         InvadeMgr.inst.InvadeChallengeResp(t);
     }
+
+    //206901星宿试炼数据同步
+    static StarTrialDataMsg(t) {
+        logger.debug("[MsgRecvMgr] 星宿试炼数据同步");
+        StarTrialMgr.inst.SyncStarTrialData(t)
+    }
+    
 // TODO: 以下代码未完成
 // import SystemUnlockMgr from "#game/mgr/SystemUnlockMgr.js";
 //     // 102 系统解锁同步
