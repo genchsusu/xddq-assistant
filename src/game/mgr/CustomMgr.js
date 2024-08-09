@@ -47,7 +47,9 @@ export default class CustomMgr {
             this.lastExecuteTime = now;
             // 进入宗门系统 TODO 判断是否开启宗门系统
             GameNetMgr.inst.sendPbMsg(Protocol.S_PUPIL_ENTER, {}, null);
-            GameNetMgr.inst.sendPbMsg(Protocol.S_PUPIL_TRAIN, { isOneKey: 1 }, null);
+            if (global.account.switch.pupil) {
+                GameNetMgr.inst.sendPbMsg(Protocol.S_PUPIL_TRAIN, { isOneKey: 1 }, null);
+            }
             // 仙宫外部数据请求 TODO 判断是否开启仙宫
             GameNetMgr.inst.sendPbMsg(Protocol.S_PALACE_ENTER_OUTER, {}, null);
         }    
