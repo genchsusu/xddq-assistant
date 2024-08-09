@@ -42,7 +42,7 @@ export default class StarTrialMgr {
         if (this.isProcessing) return
         this.isProcessing = true
         try {
-            if (this.maxCount - this.challengeTimes <= 20) {
+            if (this.maxCount - this.challengeTimes <= 10) {
                 logger.info(`[星宿试炼]任务完成,停止循环,剩余挑战次数:${this.challengeTimes}`)
                 this.clear()
                 return
